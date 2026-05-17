@@ -72,8 +72,6 @@ function FlipCard({
           className="absolute inset-0 bg-card border border-border rounded-2xl p-5 flex flex-col cursor-pointer hover:shadow-lg hover:border-brand-500/30 transition-all"
           style={{ backfaceVisibility: "hidden" }}
           onClick={() => { setIsFlipped(true); setIsForm(false); }}
-          onMouseEnter={() => { if (!isForm) setIsFlipped(true); }}
-          onMouseLeave={() => { if (!isForm) setIsFlipped(false); }}
         >
           <div className="flex items-center justify-between mb-3">
             <div
@@ -93,7 +91,7 @@ function FlipCard({
           <p className="text-[11px] text-foreground/40 mt-1">{exercise.muscles}</p>
           <div className="mt-3 flex items-center gap-1 text-[10px] text-foreground/30">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-            Hover to learn more
+            Click to learn more
           </div>
         </div>
 
@@ -101,15 +99,23 @@ function FlipCard({
         <div
           className="absolute inset-0 bg-card border border-border rounded-2xl p-5 flex flex-col"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-          onMouseLeave={() => { if (!isForm) { setIsFlipped(false); } }}
         >
           {!isForm ? (
             <>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: cat?.bgColor }}>
-                  <ExerciseIcon category={exercise.category} size={16} />
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: cat?.bgColor }}>
+                    <ExerciseIcon category={exercise.category} size={16} />
+                  </div>
+                  <h3 className="font-semibold text-sm text-foreground truncate">{exercise.name}</h3>
                 </div>
-                <h3 className="font-semibold text-sm text-foreground">{exercise.name}</h3>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
+                  className="text-foreground/40 hover:text-foreground text-xs shrink-0"
+                  aria-label={`Close ${exercise.name} details`}
+                >
+                  Close
+                </button>
               </div>
               <p className="text-xs text-foreground/60 leading-relaxed flex-1">{exercise.description}</p>
               <div className="mt-2 mb-3">
@@ -361,7 +367,7 @@ export default function WorkoutsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Workouts</h1>
         <p className="text-foreground/60 mt-1">
-          Tap an exercise to learn about it. Click "Log" to record your session.
+          Click an exercise to learn about it. Click "Log" to record your session.
         </p>
       </div>
 
