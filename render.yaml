@@ -2,14 +2,11 @@ services:
   - type: web
     name: fitsaas-api
     env: node
+    plan: free
     buildCommand: npm install && npm run build --workspace=apps/api && npx prisma generate --schema=packages/database/prisma/schema.prisma && npx prisma db push --schema=packages/database/prisma/schema.prisma
     startCommand: npm start --workspace=apps/api
     envVars:
       - key: DATABASE_URL
-        value: "file:/data/sqlite.db"
+        sync: false
       - key: JWT_SECRET
         generateValue: true
-    disk:
-      name: sqlite-data
-      mountPath: /data
-      sizeGB: 1
