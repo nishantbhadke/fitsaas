@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/workouts", label: "Workouts", icon: "🏋️" },
-  { href: "/dashboard/progress", label: "Progress", icon: "📈" },
+  { href: "/dashboard", label: "Overview", icon: "O" },
+  { href: "/dashboard/workouts", label: "Workouts", icon: "W" },
+  { href: "/dashboard/progress", label: "Progress", icon: "P" },
 ];
 
 export default function DashboardLayout({
@@ -24,7 +24,7 @@ export default function DashboardLayout({
             F
           </div>
           <span className="font-bold text-xl text-foreground tracking-tight">
-            FitSaaS
+            Training
           </span>
         </Link>
         <nav className="flex flex-col gap-1">
@@ -40,7 +40,9 @@ export default function DashboardLayout({
                     : "text-foreground/70 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                <span className="text-base">{item.icon}</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-foreground/5 text-[10px] font-bold">
+                  {item.icon}
+                </span>
                 {item.label}
               </Link>
             );

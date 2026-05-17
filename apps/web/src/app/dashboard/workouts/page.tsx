@@ -76,13 +76,13 @@ function FlipCard({
           <div className="flex items-center justify-between mb-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: cat?.bgColor }}
+              style={{ backgroundColor: `${cat?.color || "#22c55e"}18` }}
             >
               <ExerciseIcon category={exercise.category} size={20} />
             </div>
             <span
               className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ color: cat?.color, backgroundColor: cat?.bgColor }}
+              style={{ color: cat?.color, backgroundColor: `${cat?.color || "#22c55e"}18` }}
             >
               {cat?.label}
             </span>
@@ -178,6 +178,132 @@ function FlipCard({
   );
 }
 
+function WorkoutCard({
+  exercise,
+  onLog,
+}: {
+  exercise: Exercise;
+  onLog: (name: string, duration: string, notes: string) => void;
+}) {
+  const [mode, setMode] = useState<"summary" | "details" | "record">("summary");
+  const [duration, setDuration] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const cat = categories.find((c) => c.id === exercise.category);
+
+  const handleLog = async () => {
+    setSubmitting(true);
+    await onLog(exercise.name, duration, notes);
+    setSubmitting(false);
+    setDuration("");
+    setNotes("");
+    setMode("summary");
+  };
+
+  return (
+    <article className="bg-card border border-border rounded-2xl p-5 flex min-h-[286px] flex-col shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-brand-500/30">
+      {mode !== "record" ? (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <div
+              className="w-12 h-12 rounded-2xl flex shrink-0 items-center justify-center"
+              style={{ backgroundColor: `${cat?.color || "#22c55e"}18` }}
+            >
+              <ExerciseIcon category={exercise.category} size={22} />
+            </div>
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              style={{ color: cat?.color, backgroundColor: `${cat?.color || "#22c55e"}18` }}
+            >
+              {cat?.label}
+            </span>
+          </div>
+
+          <div className="mt-5 flex-1">
+            <h3 className="font-semibold text-foreground text-base leading-tight">{exercise.name}</h3>
+            <p className="text-xs text-foreground/50 mt-1.5 leading-relaxed">{exercise.muscles}</p>
+            <p className={`text-sm text-foreground/60 mt-4 leading-6 ${mode === "summary" ? "line-clamp-3" : ""}`}>
+              {exercise.description}
+            </p>
+
+            {mode === "details" && (
+              <div className="mt-4 rounded-xl border border-border bg-background/60 p-3">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/40">Targets</span>
+                <p className="text-xs font-medium text-foreground/80 mt-1">{exercise.muscles}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-[0.85fr_1.15fr] gap-2">
+            <button
+              onClick={() => setMode(mode === "details" ? "summary" : "details")}
+              className="h-11 rounded-xl border border-border bg-background text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            >
+              {mode === "details" ? "Less" : "Details"}
+            </button>
+            <button
+              onClick={() => setMode("record")}
+              className="h-11 rounded-xl text-white font-semibold text-xs transition-colors hover:opacity-90"
+              style={{ backgroundColor: cat?.color }}
+            >
+              Record Workout
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="flex min-h-full flex-col">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-base text-foreground truncate">{exercise.name}</h3>
+              <p className="text-xs text-foreground/45 mt-1">Record your session</p>
+            </div>
+            <button
+              onClick={() => setMode("summary")}
+              className="text-foreground/40 hover:text-foreground text-sm shrink-0"
+              aria-label={`Close ${exercise.name} record form`}
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-4">
+            <div>
+              <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Duration (min)</label>
+              <input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="45"
+                min="1"
+                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Notes</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Sets, reps, PRs, or how it felt"
+                rows={3}
+                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-none"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleLog}
+            disabled={submitting}
+            className="w-full h-11 rounded-xl text-white font-semibold text-xs transition-colors disabled:opacity-50 mt-5 hover:opacity-90"
+            style={{ backgroundColor: cat?.color }}
+          >
+            {submitting ? "Saving..." : "Save Workout Record"}
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
 function CustomWorkoutCard({
   onLog,
 }: {
@@ -204,10 +330,9 @@ function CustomWorkoutCard({
     return (
       <div
         onClick={() => setIsOpen(true)}
-        className="bg-card border-2 border-dashed border-border rounded-2xl p-5 flex flex-col items-center justify-center cursor-pointer hover:border-brand-500/40 hover:shadow-md transition-all group"
-        style={{ minHeight: "220px" }}
+        className="bg-card border-2 border-dashed border-border rounded-2xl p-5 min-h-[286px] flex flex-col items-center justify-center cursor-pointer hover:border-brand-500/40 hover:shadow-md transition-all group"
       >
-        <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 4v16m8-8H4" />
           </svg>
@@ -219,18 +344,21 @@ function CustomWorkoutCard({
   }
 
   return (
-    <div className="bg-card border border-brand-500/30 rounded-2xl p-5 flex flex-col shadow-lg" style={{ minHeight: "220px" }}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm text-foreground">Custom Workout</h3>
+    <div className="bg-card border border-brand-500/30 rounded-2xl p-5 min-h-[286px] flex flex-col shadow-lg">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-semibold text-base text-foreground">Custom Workout</h3>
+          <p className="text-xs text-foreground/45 mt-1">Record anything not in the library</p>
+        </div>
         <button onClick={() => setIsOpen(false)} className="text-foreground/40 hover:text-foreground text-xs">✕</button>
       </div>
-      <div className="flex-1 flex flex-col gap-2">
+      <div className="flex-1 flex flex-col gap-3">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Workout name..."
-          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
           autoFocus
         />
         <input
@@ -239,14 +367,14 @@ function CustomWorkoutCard({
           onChange={(e) => setDuration(e.target.value)}
           placeholder="Duration (min)"
           min="1"
-          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
         />
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes..."
-          rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
+          rows={3}
+          className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-none"
         />
         <div className="text-[10px] text-foreground/30">
           ⏱ {new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
@@ -255,7 +383,7 @@ function CustomWorkoutCard({
       <button
         onClick={handleLog}
         disabled={submitting || !name.trim()}
-        className="w-full py-2 rounded-xl bg-brand-600 text-white font-medium text-xs hover:bg-brand-500 transition-colors disabled:opacity-50 mt-2"
+        className="w-full h-11 rounded-xl bg-brand-600 text-white font-semibold text-xs hover:bg-brand-500 transition-colors disabled:opacity-50 mt-5"
       >
         {submitting ? "Saving..." : "Save Custom Workout"}
       </button>
@@ -367,7 +495,7 @@ export default function WorkoutsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Workouts</h1>
         <p className="text-foreground/60 mt-1">
-          Click an exercise to learn about it. Click "Log" to record your session.
+          Use Details to learn the movement, or Record Workout to save your session.
         </p>
       </div>
 
@@ -403,7 +531,7 @@ export default function WorkoutsPage() {
       {/* Exercise Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.map((exercise) => (
-          <FlipCard key={exercise.id} exercise={exercise} onLog={handleLog} />
+          <WorkoutCard key={exercise.id} exercise={exercise} onLog={handleLog} />
         ))}
         <CustomWorkoutCard onLog={handleLog} />
       </div>
