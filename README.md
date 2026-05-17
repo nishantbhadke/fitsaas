@@ -1,43 +1,61 @@
 # FitSaaS
 
-A sleek, premium fitness tracking ecosystem designed for performance and aesthetics. Track your workouts, analyze your progress, and stay consistent with zero clutter.
+FitSaaS is a clean fitness tracking app for logging workouts, checking progress, and sharing workout wins without clutter.
 
-## Features
-- 🏋️ **Workout Library**: Categorized exercises with a modern flip-card interface.
-- 📊 **Dynamic Dashboard**: Beautiful SVG-based progress tracking and consistency heatmaps.
-- 🔒 **Secure Authentication**: Google OAuth and seamless JWT session management.
+## What It Does
 
-## Tech Stack
-FitSaaS is built as a monorepo for maximum developer efficiency and speed:
-- **Frontend (Web)**: Next.js with TailwindCSS.
-- **Backend (API)**: Fastify (a high-performance Node.js framework).
-- **Database**: SQLite managed by Prisma ORM.
+- Browse a categorized workout library with polished exercise cards.
+- Log workouts with duration and notes.
+- Save workout history to your personal account.
+- View progress with dashboard charts, workout type breakdowns, and consistency tracking.
+- Export a social-ready workout summary image from recent logs.
+- Sign in securely with Google.
 
-> **Security Note**: All environment variables and local databases (`*.db`) are strictly ignored in `.gitignore`. Your credentials and user data are never pushed to the repository.
+## What It Is Built With
 
-## Hosting & Deployment
-The app is fully configured for live deployment:
+- **Web app**: Next.js and TailwindCSS
+- **Backend**: Fastify API
+- **Database**: Neon PostgreSQL with Prisma
+- **Hosting plan**: Vercel for the web app, Render free tier for the API, Neon free tier for the database
 
-### 1. Backend (Render)
-Deploy `apps/api` on Render using the included `render.yaml` configuration. This mounts a persistent disk (`/data`) so your SQLite database is never wiped between deploys.
+## Hosting Setup
 
-### 2. Frontend (Vercel)
-1. Push this repository to your GitHub account.
-2. Log into Vercel and click "Add New Project", then import this repository.
-3. In the Vercel project settings, set the **Root Directory** to `apps/web`.
-4. Add your Environment Variables (`NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `NEXT_PUBLIC_API_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
-5. Click **Deploy**. Your sleek web app is now live!
+### Backend on Render
 
-## How to Build the Android App
-Because FitSaaS uses a secure, server-side Next.js architecture, the absolute best way to publish it as an Android app is via a **Trusted Web Activity (TWA)**. This transforms your live Vercel website into an official `.apk`/`.aab` package for the Google Play Store with zero code changes.
+Use the included `render.yaml` file to deploy the API on Render's free web service plan.
 
-1. Deploy your app to Vercel (see above).
-2. Go to **[PWABuilder.com](https://www.pwabuilder.com/)** and enter your Vercel URL.
-3. PWABuilder will automatically package your app into a high-performance Android `.apk` file that you can install on any Android phone or upload to the Google Play Console!
+Add these Render environment variables:
 
-## Future Roadmap Ideas
-Want to make the app even better? Here are some features we could build next:
-- [ ] **Social Sharing**: Export a beautiful image of your workout summary for Instagram/Twitter.
-- [ ] **Gamification**: Earn badges for 7-day or 30-day workout streaks.
-- [ ] **Offline Mode (PWA)**: Make the app installable on mobile devices so you can track workouts in the gym without internet.
-- [ ] **Dark Mode Toggle**: Allow users to manually switch themes rather than relying purely on system preferences.
+- `DATABASE_URL`: your Neon PostgreSQL connection string
+- `JWT_SECRET`: a long random secret for API tokens
+
+Render will install dependencies, generate Prisma, build the API, and push the Prisma schema to Neon during deployment.
+
+### Frontend on Vercel
+
+Import the GitHub repository into Vercel and set the root directory to `apps/web`.
+
+Add these Vercel environment variables:
+
+- `NEXTAUTH_URL`: your Vercel app URL
+- `NEXTAUTH_SECRET`: a long random secret for NextAuth
+- `NEXT_PUBLIC_API_URL`: your Render API URL
+- `GOOGLE_CLIENT_ID`: your Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET`: your Google OAuth client secret
+
+After the Render API is live, update `NEXT_PUBLIC_API_URL` in Vercel and redeploy the frontend.
+
+## Android App Path
+
+The fastest free path for Android is a Progressive Web App or Trusted Web Activity using the live Vercel URL. After the site is live, use PWABuilder to package it for Android without rewriting the app.
+
+## Future Ideas
+
+- Streaks and badges for consistency.
+- Offline support for gym use.
+- Manual dark mode toggle.
+- Better workout templates and personal goals.
+
+## Security
+
+Secrets, `.env` files, and local database files are ignored by git. Keep real credentials inside Vercel, Render, and Neon settings rather than committing them to the repository.
