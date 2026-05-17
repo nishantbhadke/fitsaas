@@ -14,7 +14,7 @@ const handler = NextAuth({
       if (account && user) {
         // Here we send the Google profile to our Fastify backend
         try {
-          const res = await fetch("http://localhost:3001/auth/google", {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/google`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

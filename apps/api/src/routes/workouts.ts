@@ -49,4 +49,18 @@ export default async function workoutRoutes(server: FastifyInstance) {
 
     return { workout };
   });
+
+  server.delete('/:id', async (request, reply) => {
+    const user = (request as any).user;
+    const { id } = request.params as any;
+
+    try {
+      await prisma.workout.delete({
+        where: { id, userId: user.id },
+      });
+      return { success: true };
+    } catch (error) {
+      return reply.status(500).send({ error: 'Failed to delete workout' });
+    }
+  });
 }
