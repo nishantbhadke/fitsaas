@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "O" },
@@ -49,6 +50,16 @@ export default function DashboardLayout({
             );
           })}
         </nav>
+        <div className="hidden md:block flex-1" />
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="flex items-center gap-3 px-4 py-2.5 rounded-xl font-semibold text-sm text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer text-left w-full"
+        >
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-red-500/10 text-[10px] font-bold">
+            L
+          </span>
+          Logout
+        </button>
       </aside>
       <main className="flex-1 p-6 md:p-10 max-w-6xl w-full">{children}</main>
     </div>

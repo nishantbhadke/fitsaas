@@ -374,19 +374,7 @@ export default function DashboardPage() {
     initData();
   }, [status, fetchWorkouts, fetchProfile]);
 
-  useEffect(() => {
-    if (userProfile && !loading) {
-      const isProfileIncomplete = 
-        !userProfile.gender || 
-        !userProfile.weight || 
-        !userProfile.height || 
-        !userProfile.birthDate;
 
-      if (isProfileIncomplete) {
-        router.push("/dashboard/profile?onboarding=true");
-      }
-    }
-  }, [userProfile, loading, router]);
 
   if (status === "loading") {
     return (
@@ -599,6 +587,28 @@ export default function DashboardPage() {
         </div>
         <button onClick={() => signOut({ callbackUrl: "/login" })} className="px-4 py-2 text-sm font-semibold border border-border rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-foreground transition-colors cursor-pointer">Logout</button>
       </div>
+
+      {/* Onboarding Alert Banner */}
+      {!loading && userProfile && (
+        (!userProfile.gender || !userProfile.weight || !userProfile.height || !userProfile.birthDate)
+      ) && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-amber-500 flex items-center gap-1.5">
+              <span>👋</span> Complete Your Onboarding Profile
+            </h4>
+            <p className="text-xs text-foreground/60 leading-relaxed">
+              Unlock phase-specific cycle workouts, body stats tracking, and targeted fitness recommendations by completing your profile details.
+            </p>
+          </div>
+          <a
+            href="/dashboard/profile?onboarding=true"
+            className="px-4 py-2 bg-amber-500 text-zinc-950 rounded-xl text-xs font-bold shrink-0 hover:bg-amber-400 transition-colors shadow-sm"
+          >
+            Complete Setup
+          </a>
+        </div>
+      )}
 
       {/* Women's Health Synergy Widget */}
       {cycleInfo && (
