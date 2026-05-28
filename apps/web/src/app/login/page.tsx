@@ -57,47 +57,108 @@ function LoginContent() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#09090b] px-4 text-white">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#121316] p-8 shadow-2xl shadow-black/50">
-        <div className="flex flex-col items-center mb-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400 text-base font-black text-zinc-950">F</div>
+    <main className="relative min-h-screen w-full flex items-center justify-center bg-[#030712] px-4 overflow-hidden text-white">
+      {/* Dynamic Keyframe Animations Injection */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes float-slow {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(30px, -50px) scale(1.15); }
+        }
+        @keyframes float-reverse {
+          0%, 100% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-40px, 40px) scale(0.9); }
+        }
+        @keyframes pulse-gentle {
+          0%, 100% { opacity: 0.25; }
+          50% { opacity: 0.45; }
+        }
+        @keyframes orbit-slow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-float-1 { animation: float-slow 20s infinite ease-in-out; }
+        .animate-float-2 { animation: float-reverse 25s infinite ease-in-out; }
+        .animate-pulse-slow { animation: pulse-gentle 8s infinite ease-in-out; }
+        .animate-orbit { animation: orbit-slow 40s infinite linear; }
+      `}} />
+
+      {/* Kinetic Active Gym Vectors & glowing blobs */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Glow blob 1 */}
+        <div className="absolute top-[10%] left-[15%] w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] animate-float-1" />
+        
+        {/* Glow blob 2 */}
+        <div className="absolute bottom-[10%] right-[15%] w-96 h-96 rounded-full bg-teal-500/10 blur-[120px] animate-float-2" />
+
+        {/* Orbit Grid lines */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] animate-pulse-slow">
+          <svg className="w-[800px] h-[800px] text-white" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1 3" />
+            <circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="2 2" />
+            <circle cx="50" cy="50" r="24" fill="none" stroke="currentColor" strokeWidth="0.1" />
+          </svg>
+        </div>
+
+        {/* Spinning Kinetic Dumbbell & Cycle lines */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-[0.08] animate-orbit">
+          <svg className="w-full h-full text-emerald-400" viewBox="0 0 200 200">
+            {/* Dumbbell Icon Path Floating */}
+            <path 
+              d="M30,100 L170,100 M65,85 L65,115 M50,80 L50,120 M135,85 L135,115 M150,80 L150,120" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+            />
+            {/* Run vector trail */}
+            <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" strokeWidth="0.75" strokeDasharray="5 15" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Sleek Compact Glassmorphic Card Container */}
+      <div className="relative z-10 w-full max-w-[390px] rounded-3xl border border-white/[0.08] bg-zinc-950/40 backdrop-blur-xl p-7 shadow-[0_20px_50px_rgba(0,0,0,0.8)] shadow-black/80">
+        <div className="flex flex-col items-center mb-6">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-black text-zinc-950 shadow-[0_0_20px_rgba(52,211,153,0.3)] group-hover:scale-105 transition-transform duration-300">
+              F
+            </div>
             <div>
-              <div className="text-lg font-black tracking-tight text-white">FitSaaS</div>
-              <div className="text-xs uppercase tracking-[0.24em] text-white/40">Command Center</div>
+              <div className="text-base font-black tracking-tight text-white group-hover:text-emerald-400 transition-colors">FitSaaS</div>
+              <div className="text-[9px] uppercase tracking-[0.28em] text-white/30">Command Center</div>
             </div>
           </Link>
-          <h2 className="mt-8 text-2xl font-bold tracking-tight text-white text-center">Welcome Back</h2>
-          <p className="mt-2 text-sm text-white/60 text-center">Sign in to your fitness command center</p>
+          <h2 className="mt-6 text-xl font-bold tracking-tight text-white text-center">Welcome Back</h2>
+          <p className="mt-1 text-xs text-white/50 text-center">Access your personalized training vault</p>
         </div>
 
         {error && (
-          <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-xs font-semibold text-red-400">
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3.5 text-center text-xs font-semibold text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Email Address</label>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1.5">Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full h-[52px] px-4 rounded-2xl border border-white/10 bg-white/[0.04] text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white/[0.06] transition-all"
+              placeholder="name@example.com"
+              className="w-full h-12 px-4 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white/[0.05] transition-all"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Password</label>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1.5">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-[52px] px-4 rounded-2xl border border-white/10 bg-white/[0.04] text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white/[0.06] transition-all"
+              className="w-full h-12 px-4 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white/[0.05] transition-all"
               required
             />
           </div>
@@ -105,33 +166,33 @@ function LoginContent() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full h-[52px] flex items-center justify-center rounded-2xl bg-emerald-400 text-sm font-black text-zinc-950 transition-all hover:opacity-90 disabled:opacity-50 mt-6"
+            className="w-full h-12 flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 text-xs font-black text-zinc-950 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 mt-5 cursor-pointer shadow-[0_4px_20px_rgba(52,211,153,0.15)]"
           >
-            {submitting ? "Signing in..." : "Sign In"}
+            {submitting ? "AUTHORIZING..." : "SIGN IN"}
           </button>
         </form>
 
-        <div className="relative my-6">
+        <div className="relative my-5">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-white/10"></div>
+            <div className="w-full border-t border-white/[0.06]"></div>
           </div>
-          <div className="relative flex justify-center text-xs font-semibold uppercase tracking-wider">
-            <span className="bg-[#121316] px-3 text-white/40">Or continue with</span>
+          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest">
+            <span className="bg-zinc-950/20 px-2 text-white/30 backdrop-blur-md">Or continue with</span>
           </div>
         </div>
 
         <button
           onClick={() => signIn("google", { callbackUrl })}
-          className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-bold text-white transition-all hover:bg-white/[0.08]"
+          className="w-full h-12 flex items-center justify-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] text-xs font-bold text-white transition-all hover:bg-white/[0.06] active:scale-[0.98] cursor-pointer"
         >
           <GoogleIcon />
           Sign in with Google
         </button>
 
-        <p className="mt-8 text-center text-sm text-white/40">
-          Don't have an account?{" "}
+        <p className="mt-6 text-center text-xs text-white/30">
+          New to the training deck?{" "}
           <Link href="/register" className="font-bold text-emerald-400 hover:underline">
-            Register for free
+            Join for free
           </Link>
         </p>
       </div>
@@ -142,7 +203,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center bg-[#09090b] px-4 text-white">
+      <main className="min-h-screen flex items-center justify-center bg-[#030712] px-4 text-white">
         <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
       </main>
     }>
