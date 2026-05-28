@@ -25,9 +25,17 @@ export default function ProfilePage() {
   const [dailyWaterGoal, setDailyWaterGoal] = useState(2000);
   const [dailyCalorieGoal, setDailyCalorieGoal] = useState(2000);
 
+  // Diet customizer state
+  const [dietPlanEnabled, setDietPlanEnabled] = useState(false);
+  const [dietType, setDietType] = useState("NON_VEGETARIAN");
+  const [isLactoseIntolerant, setIsLactoseIntolerant] = useState(false);
+  const [isGlutenFree, setIsGlutenFree] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const fetchProfile = useCallback(async () => {
     if (!session?.appToken) return;
@@ -54,6 +62,10 @@ export default function ProfilePage() {
         setActivityLevel(u.activityLevel || "MODERATELY_ACTIVE");
         setDailyWaterGoal(u.dailyWaterGoal || 2000);
         setDailyCalorieGoal(u.dailyCalorieGoal || 2000);
+        setDietPlanEnabled(u.dietPlanEnabled || false);
+        setDietType(u.dietType || "NON_VEGETARIAN");
+        setIsLactoseIntolerant(u.isLactoseIntolerant || false);
+        setIsGlutenFree(u.isGlutenFree || false);
       }
     } catch (err) {
       console.error("Failed to fetch profile:", err);
@@ -69,6 +81,22 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session?.appToken) return;
+    
+    // Strict validations on positive bounds
+    const parsedWeight = weight ? parseFloat(weight) : null;
+    const parsedHeight = height ? parseFloat(height) : null;
+    const parsedTargetWeight = targetWeight ? parseFloat(targetWeight) : null;
+    const parsedCalorie = dailyCalorieGoal ? parseInt(dailyCalorieGoal.toString()) : null;
+    const parsedWater = dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null;
+    const parsedCycle = cycleLength ? parseInt(cycleLength.toString()) : null;
+
+    if (parsedWeight !== null && parsedWeight < 0) return alert("Weight cannot be negative.");
+    if (parsedHeight !== null && parsedHeight < 0) return alert("Height cannot be negative.");
+    if (parsedTargetWeight !== null && parsedTargetWeight < 0) return alert("Target weight cannot be negative.");
+    if (parsedCalorie !== null && parsedCalorie < 0) return alert("Daily calorie goal cannot be negative.");
+    if (parsedWater !== null && parsedWater < 0) return alert("Daily water goal cannot be negative.");
+    if (parsedCycle !== null && parsedCycle < 0) return alert("Cycle length cannot be negative.");
+
     setSaving(true);
 
     try {
@@ -83,13 +111,17 @@ export default function ProfilePage() {
           gender: gender || null,
           cycleLength: gender === "FEMALE" ? cycleLength : null,
           lastPeriodStart: gender === "FEMALE" ? (lastPeriodStart || null) : null,
-          weight: weight ? parseFloat(weight) : null,
-          height: height ? parseFloat(height) : null,
-          targetWeight: targetWeight ? parseFloat(targetWeight) : null,
+          weight: parsedWeight,
+          height: parsedHeight,
+          targetWeight: parsedTargetWeight,
           birthDate: birthDate ? new Date(birthDate) : null,
           activityLevel,
-          dailyWaterGoal: dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null,
-          dailyCalorieGoal: dailyCalorieGoal ? parseInt(dailyCalorieGoal.toString()) : null,
+          dailyWaterGoal: parsedWater,
+          dailyCalorieGoal: parsedCalorie,
+          dietPlanEnabled,
+          dietType,
+          isLactoseIntolerant,
+          isGlutenFree,
         }),
       });
 
@@ -105,7 +137,8 @@ export default function ProfilePage() {
         setToast("✨ Profile successfully synced!");
         setTimeout(() => setToast(null), 3000);
       } else {
-        setToast("❌ Failed to update profile.");
+        const errorData = await res.json();
+        setToast(`❌ Failed: ${errorData.error || "Update rejected."}`);
         setTimeout(() => setToast(null), 3000);
       }
     } catch (err) {
@@ -117,6 +150,117 @@ export default function ProfilePage() {
     }
   };
 
+  // Target Weight Forecast logic
+  const getWeightForecast = () => {
+    const curW = parseFloat(weight);
+    const tarW = parseFloat(targetWeight);
+    if (!isNaN(curW) && !isNaN(tarW) && curW > 0 && tarW > 0) {
+      const diff = Math.abs(curW - tarW);
+      if (diff === 0) return null;
+      const weeks = diff / 0.5; // safe 0.5 kg per week pace
+      const days = Math.round(weeks * 7);
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + days);
+      const dateString = targetDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      return { weeks: weeks.toFixed(1), dateString, days, targetWeight: tarW };
+    }
+    return null;
+  };
+
+  const forecast = getWeightForecast();
+
+  const handleDownloadReminder = () => {
+    if (!forecast) return;
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + forecast.days);
+    const yyyy = targetDate.getFullYear();
+    const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(targetDate.getDate()).padStart(2, '0');
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      `DTSTART:${yyyy}${mm}${dd}T090000`,
+      `DTEND:${yyyy}${mm}${dd}T100000`,
+      "SUMMARY:FitSaaS: Reach Weight Goal target!",
+      `DESCRIPTION:Friendly reminder to reach your target weight of ${forecast.targetWeight} kg. Safe healthy pacing target completed!`,
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "fitsaas-weight-target.ics");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Indian Protein meal generator
+  const getIndianDietMeals = (type: string, lactose: boolean, gluten: boolean, calories: number) => {
+    let breakfast = "";
+    let lunch = "";
+    let snack = "";
+    let dinner = "";
+    let proteinSource = "";
+
+    if (type === "VEGAN") {
+      proteinSource = "Tofu, Roasted Chana, Soya, Moong Sprouts";
+      breakfast = `Moong Dal Chilla stuffed with high-protein crumbled Tofu ${gluten ? "(Gluten-Free)" : ""}, mixed salad & roasted almonds.`;
+      lunch = `High-protein Chickpea (Chole) salad bowl with brown rice, sautéed spinach, and warm spiced Dal.`;
+      snack = `Roasted Peanut Chaat with cucumber, tomatoes, lemon juice, organic soy milk or raw pumpkin seeds.`;
+      dinner = `Vegan Tofu & Broccoli curry cooked in cold-pressed mustard oil, thick lentil soup (Masoor dal).`;
+    } else if (type === "VEGETARIAN") {
+      proteinSource = lactose ? "Tofu, Tempeh, Soya, Split Lentils" : "Paneer, Curd, Greek Yogurt, Whey Protein";
+      breakfast = lactose 
+        ? `High-protein Tofu Scramble with green chutney, almonds, and raw Moong sprouts.`
+        : `Spiced Paneer Bhurji (120g) made in pure ghee, sautéed spinach, and 1 multigrain chila ${gluten ? "(Gluten-Free)" : "or toast"}.`;
+      lunch = lactose
+        ? `Soya chunks masala curry, yellow split dal tadka, brown rice, cucumber salad.`
+        : `Dal Makhani with Paneer Tikka (150g), carrot cucumber raita, raw salad ${gluten ? "(Gluten-Free millet roti)" : "with 2 phulkas"}.`;
+      snack = lactose
+        ? `Roasted foxnuts (Makhana) with walnuts, water or almond milk.`
+        : `Greek Yogurt (150g) or Whey protein shake, walnuts, blueberries & pumpkin seeds.`;
+      dinner = lactose
+        ? `Tempeh & vegetable stir-fry, high-protein horsegram dal, spinach salad.`
+        : `Grilled Paneer Tikka skewers with bell peppers & onions, hot split red lentil soup, roasted broccoli.`;
+    } else {
+      // Non-Vegetarian
+      proteinSource = lactose ? "Egg whites, Grilled Chicken, Fish, Yellow Dal" : "Egg whites, Chicken breast, Salmon, Curd";
+      breakfast = `Egg white Bhurji (4 egg whites, 1 whole egg) with onion, tomato & coriander, toasted bread ${gluten ? "(Gluten-Free bread)" : ""}.`;
+      lunch = `Tandoori Chicken Breast (150g), yellow tadka dal, organic brown rice, mixed green salad.`;
+      snack = lactose
+        ? `Roasted chana (chickpeas) with 1 boiled egg white and almonds.`
+        : `Whey protein shake, handful of roasted foxnuts (Makhana), 1 whole boiled egg.`;
+      dinner = `Baked Salmon or Indian Chicken Breast curry (180g), hot red lentil soup, raw cucumber strips.`;
+    }
+
+    const ratio = calories / 2000;
+    const bKcal = Math.round(450 * ratio);
+    const lKcal = Math.round(650 * ratio);
+    const sKcal = Math.round(250 * ratio);
+    const dKcal = Math.round(650 * ratio);
+
+    return [
+      { name: "🌅 Breakfast", desc: breakfast, kcal: bKcal },
+      { name: "🍛 Lunch", desc: lunch, kcal: lKcal },
+      { name: "🥜 High-Protein Snack", desc: snack, kcal: sKcal },
+      { name: "🌌 Dinner", desc: dinner, kcal: dKcal },
+      { name: "💪 Major Protein Sources", desc: proteinSource, kcal: null }
+    ];
+  };
+
+  const dietPlan = getIndianDietMeals(dietType, isLactoseIntolerant, isGlutenFree, dailyCalorieGoal);
+
   if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center p-16">
@@ -126,7 +270,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-white">
+    <div className="max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-foreground">
       {/* Toast */}
       {toast && (
         <div className="fixed top-6 right-6 z-50 bg-card border border-brand-500/30 shadow-xl rounded-xl px-5 py-3 text-sm font-medium text-foreground animate-in fade-in slide-in-from-top-2 duration-300">
@@ -150,13 +294,13 @@ export default function ProfilePage() {
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{name || "User Profile"}</h1>
-            <p className="text-white/40 text-sm mt-1">{session?.user?.email}</p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{name || "User Profile"}</h1>
+            <p className="text-foreground/60 text-sm mt-1">{session?.user?.email}</p>
           </div>
         </div>
-        {image && (
-          <div className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3 text-xs font-semibold text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        {image && image.includes("googleusercontent.com") && (
+          <div className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-border px-3 text-xs font-semibold text-emerald-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Google Connected
           </div>
         )}
@@ -166,62 +310,70 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Personal Characteristics */}
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-emerald-400 uppercase tracking-wider border-b border-border pb-3">Personal Metrics</h2>
+            <h2 className="text-base font-bold text-emerald-500 uppercase tracking-wider border-b border-border pb-3">Personal Metrics</h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Display Name</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Display Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Birth Date</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Birth Date</label>
                 <input
                   type="date"
                   value={birthDate}
+                  max={todayStr}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Height (cm)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Height (cm)</label>
                 <input
                   type="number"
                   value={height}
-                  onChange={(e) => setHeight(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseFloat(val) >= 0) setHeight(val);
+                  }}
                   placeholder="175"
-                  min="50"
+                  min="0"
                   max="250"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  step="1"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Current Weight (kg)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Current Weight (kg)</label>
                 <input
                   type="number"
                   step="0.1"
                   value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseFloat(val) >= 0) setWeight(val);
+                  }}
                   placeholder="72.5"
-                  min="20"
+                  min="0"
                   max="300"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Gender Identification</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Gender Identification</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
@@ -238,25 +390,28 @@ export default function ProfilePage() {
 
           {/* Card 2: Fitness Goals & Guidelines */}
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-emerald-400 uppercase tracking-wider border-b border-border pb-3">Fitness & Lifestyle</h2>
+            <h2 className="text-base font-bold text-emerald-500 uppercase tracking-wider border-b border-border pb-3">Fitness & Lifestyle</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Target Weight (kg)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Target Weight (kg)</label>
                 <input
                   type="number"
                   step="0.1"
                   value={targetWeight}
-                  onChange={(e) => setTargetWeight(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseFloat(val) >= 0) setTargetWeight(val);
+                  }}
                   placeholder="68.0"
-                  min="20"
+                  min="0"
                   max="300"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Activity Level</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Activity Level</label>
                 <select
                   value={activityLevel}
                   onChange={(e) => setActivityLevel(e.target.value)}
@@ -272,69 +427,199 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Daily Calorie Target (kcal)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Daily Calorie Target (kcal)</label>
                 <input
                   type="number"
                   value={dailyCalorieGoal}
-                  onChange={(e) => setDailyCalorieGoal(parseInt(e.target.value) || 2000)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseInt(val) >= 0) setDailyCalorieGoal(parseInt(val) || 0);
+                  }}
                   placeholder="2200"
-                  min="500"
+                  min="0"
                   max="10000"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Daily Water Target (ml)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Daily Water Target (ml)</label>
                 <input
                   type="number"
                   value={dailyWaterGoal}
-                  onChange={(e) => setDailyWaterGoal(parseInt(e.target.value) || 2000)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseInt(val) >= 0) setDailyWaterGoal(parseInt(val) || 0);
+                  }}
                   placeholder="2500"
-                  min="500"
+                  min="0"
                   max="20000"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                   required
                 />
               </div>
             </div>
+
+            <div className="flex items-center justify-between border-t border-border pt-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="dietPlanEnabled"
+                  checked={dietPlanEnabled}
+                  onChange={(e) => setDietPlanEnabled(e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-emerald-500 focus:ring-brand-500 bg-background"
+                />
+                <label htmlFor="dietPlanEnabled" className="text-xs font-semibold uppercase tracking-wider text-foreground/80 cursor-pointer">
+                  Enable Diet Customizer
+                </label>
+              </div>
+              {dietPlanEnabled && (
+                <select
+                  value={dietType}
+                  onChange={(e) => setDietType(e.target.value)}
+                  className="h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
+                >
+                  <option value="NON_VEGETARIAN">Non-Vegetarian</option>
+                  <option value="VEGETARIAN">Vegetarian</option>
+                  <option value="VEGAN">Vegan</option>
+                </select>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Dynamic Weight Forecast Reminder Box */}
+        {forecast && (
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 animate-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🎯</span>
+                <h3 className="text-base font-bold text-emerald-500 uppercase tracking-wider">Weight Target Forecast</h3>
+              </div>
+              <span className="text-xs font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Safe 0.5 kg/week pace
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground leading-relaxed">
+                  You are estimated to reach your target weight of <strong className="text-emerald-500">{forecast.targetWeight} kg</strong> in{" "}
+                  <strong className="text-emerald-500">{forecast.weeks} weeks</strong>!
+                </p>
+                <p className="text-xs text-foreground/60">
+                  Target milestone date: <strong className="text-foreground">{forecast.dateString}</strong>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadReminder}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] border border-border px-4 text-xs font-bold text-emerald-500 transition-colors"
+              >
+                📅 Add Calendar Reminder
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Indian Protein Diet Selection */}
+        {dietPlanEnabled && (
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 animate-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🍛</span>
+                <h3 className="text-base font-bold text-emerald-500 uppercase tracking-wider">Indian High-Protein Diet Plan</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    id="lactoseToggle"
+                    checked={isLactoseIntolerant}
+                    onChange={(e) => setIsLactoseIntolerant(e.target.checked)}
+                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
+                  />
+                  <label htmlFor="lactoseToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
+                    Lactose-Free
+                  </label>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    id="glutenToggle"
+                    checked={isGlutenFree}
+                    onChange={(e) => setIsGlutenFree(e.target.checked)}
+                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
+                  />
+                  <label htmlFor="glutenToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
+                    Gluten-Free
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-foreground/60 leading-relaxed">
+              Based on your custom daily calorie budget of <strong className="text-foreground">{dailyCalorieGoal} kcal</strong>, 
+              here is your tailored High-Protein Indian Meal Plan recommendations:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+              {dietPlan.map((d, i) => (
+                <div key={i} className="bg-background border border-border rounded-xl p-4 flex flex-col justify-between gap-2">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-emerald-500 uppercase tracking-wider">{d.name}</span>
+                      {d.kcal && (
+                        <span className="text-[10px] font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full">
+                          {d.kcal} kcal
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-2 leading-relaxed text-foreground/80">{d.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Card 3: Women's Health (Conditional) */}
         {gender === "FEMALE" && (
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 animate-in slide-in-from-top-4 duration-300">
             <div className="flex items-center gap-2 border-b border-border pb-3">
               <span className="text-xl">🌸</span>
-              <h2 className="text-base font-bold text-emerald-400 uppercase tracking-wider">Women's Health Integration</h2>
+              <h2 className="text-base font-bold text-emerald-500 uppercase tracking-wider">Women's Health Integration</h2>
             </div>
-            <p className="text-xs text-white/50 leading-relaxed">
+            <p className="text-xs text-foreground/60 leading-relaxed">
               Dynamically maps hormonal cycle changes to optimize workout suggestions on your primary command dashboard.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Average Cycle Length (Days)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Average Cycle Length (Days)</label>
                 <input
                   type="number"
                   value={cycleLength}
-                  onChange={(e) => setCycleLength(parseInt(e.target.value) || 28)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || parseInt(val) >= 0) setCycleLength(parseInt(val) || 0);
+                  }}
                   placeholder="28"
-                  min="20"
+                  min="0"
                   max="45"
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Last Period Start Date</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Last Period Start Date</label>
                 <input
                   type="date"
                   value={lastPeriodStart}
+                  max={todayStr}
                   onChange={(e) => setLastPeriodStart(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
                   required
                 />
               </div>
@@ -345,7 +630,7 @@ export default function ProfilePage() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full h-12 flex items-center justify-center rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all disabled:opacity-50"
+          className="w-full h-12 flex items-center justify-center rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all disabled:opacity-50 cursor-pointer"
         >
           {saving ? "Syncing details..." : "Save Settings"}
         </button>

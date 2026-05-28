@@ -3,11 +3,16 @@ import { prisma } from 'database';
 import crypto from 'crypto';
 
 export default async function authRoutes(server: FastifyInstance) {
+  const getGravatar = (email: string) => {
+    const hash = crypto.createHash('md5').update(email.toLowerCase().trim()).digest('hex');
+    return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=150`;
+  };
+
   const serializeUser = (user: any) => ({
     id: user.id,
     email: user.email,
     name: user.name,
-    image: user.image,
+    image: user.image || getGravatar(user.email),
     gender: user.gender,
     cycleLength: user.cycleLength,
     lastPeriodStart: user.lastPeriodStart,
@@ -18,6 +23,10 @@ export default async function authRoutes(server: FastifyInstance) {
     activityLevel: user.activityLevel,
     dailyWaterGoal: user.dailyWaterGoal,
     dailyCalorieGoal: user.dailyCalorieGoal,
+    dietPlanEnabled: user.dietPlanEnabled,
+    dietType: user.dietType,
+    isLactoseIntolerant: user.isLactoseIntolerant,
+    isGlutenFree: user.isGlutenFree,
   });
 
   server.post('/register', async (request, reply) => {
@@ -116,24 +125,60 @@ export default async function authRoutes(server: FastifyInstance) {
       birthDate,
       activityLevel,
       dailyWaterGoal,
-      dailyCalorieGoal
+      dailyCalorieGoal,
+      dietPlanEnabled,
+      dietType,
+      isLactoseIntolerant,
+      isGlutenFree
     } = request.body as any;
 
     try {
+      // Validate positive bounds (no negative values)
+      if (weight !== undefined && weight !== null && parseFloat(weight) < 0) {
+        return reply.status(400).send({ error: 'Weight cannot be negative.' });
+      }
+      if (height !== undefined && height !== null && parseFloat(height) < 0) {
+        return reply.status(400).send({ error: 'Height cannot be negative.' });
+      }
+      if (targetWeight !== undefined && targetWeight !== null && parseFloat(targetWeight) < 0) {
+        return reply.status(400).send({ error: 'Target weight cannot be negative.' });
+      }
+      if (dailyWaterGoal !== undefined && dailyWaterGoal !== null && parseInt(dailyWaterGoal.toString()) < 0) {
+        return reply.status(400).send({ error: 'Daily water goal cannot be negative.' });
+      }
+      if (dailyCalorieGoal !== undefined && dailyCalorieGoal !== null && parseInt(dailyCalorieGoal.toString()) < 0) {
+        return reply.status(400).send({ error: 'Daily calorie goal cannot be negative.' });
+      }
+      if (cycleLength !== undefined && cycleLength !== null && parseInt(cycleLength.toString()) < 0) {
+        return reply.status(400).send({ error: 'Cycle length cannot be negative.' });
+      }
+
+      // Validate dates
+      if (birthDate && new Date(birthDate) > new Date()) {
+        return reply.status(400).send({ error: 'Birth date cannot be in the future.' });
+      }
+      if (lastPeriodStart && new Date(lastPeriodStart) > new Date()) {
+        return reply.status(400).send({ error: 'Last period start date cannot be in the future.' });
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: {
           name: name || undefined,
           gender: gender || null,
-          cycleLength: gender === "FEMALE" ? (cycleLength ? parseInt(cycleLength) : null) : null,
+          cycleLength: gender === "FEMALE" ? (cycleLength ? parseInt(cycleLength.toString()) : null) : null,
           lastPeriodStart: gender === "FEMALE" ? (lastPeriodStart ? new Date(lastPeriodStart) : null) : null,
-          weight: weight ? parseFloat(weight) : null,
-          height: height ? parseFloat(height) : null,
-          targetWeight: targetWeight ? parseFloat(targetWeight) : null,
+          weight: weight ? parseFloat(weight.toString()) : null,
+          height: height ? parseFloat(height.toString()) : null,
+          targetWeight: targetWeight ? parseFloat(targetWeight.toString()) : null,
           birthDate: birthDate ? new Date(birthDate) : null,
           activityLevel: activityLevel || null,
-          dailyWaterGoal: dailyWaterGoal ? parseInt(dailyWaterGoal) : null,
-          dailyCalorieGoal: dailyCalorieGoal ? parseInt(dailyCalorieGoal) : null,
+          dailyWaterGoal: dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null,
+          dailyCalorieGoal: dailyCalorieGoal ? parseInt(dailyCalorieGoal.toString()) : null,
+          dietPlanEnabled: dietPlanEnabled !== undefined ? Boolean(dietPlanEnabled) : undefined,
+          dietType: dietType || undefined,
+          isLactoseIntolerant: isLactoseIntolerant !== undefined ? Boolean(isLactoseIntolerant) : undefined,
+          isGlutenFree: isGlutenFree !== undefined ? Boolean(isGlutenFree) : undefined,
         },
       });
       return { user: serializeUser(updatedUser) };

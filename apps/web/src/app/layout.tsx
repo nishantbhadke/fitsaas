@@ -29,6 +29,26 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+                document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+                document.addEventListener('keydown', function(e) {
+                  if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c')) ||
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'u'))
+                  ) {
+                    e.preventDefault();
+                  }
+                });
+              }
+            `
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>

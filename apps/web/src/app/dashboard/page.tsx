@@ -412,6 +412,7 @@ export default function DashboardPage() {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const currentDay = (diffDays % cycleLength) + 1; // 1-indexed day of cycle
     
+    let phaseKey = "luteal";
     let phaseName = "";
     let phaseDescription = "";
     let icon = "";
@@ -421,40 +422,45 @@ export default function DashboardPage() {
     let progressBg = "";
 
     if (currentDay <= 5) {
+      phaseKey = "menstrual";
       phaseName = "Menstrual Phase";
       icon = "🌸";
       intensity = "Low";
-      colorClass = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+      colorClass = "text-rose-900 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/40";
       progressBg = "bg-rose-500";
-      phaseDescription = `Day ${currentDay} of your cycle. Progesterone and estrogen are low. Focus on recovery.`;
+      phaseDescription = `Day ${currentDay} of your cycle. Progesterone and estrogen are low. Focus on active recovery.`;
       workoutRecommendation = "Honor your body: opt for low-intensity sessions like active recovery, walking, light yoga, or slow steady cardio.";
     } else if (currentDay <= 13) {
+      phaseKey = "follicular";
       phaseName = "Follicular Phase";
       icon = "🌱";
       intensity = "High";
-      colorClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      colorClass = "text-emerald-900 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40";
       progressBg = "bg-emerald-500";
       phaseDescription = `Day ${currentDay} of your cycle. Estrogen levels are rising, driving physical stamina.`;
       workoutRecommendation = "Stamina is climbing! This is an ideal window for high-intensity cardio, hypertrophy, and heavy resistance training.";
     } else if (currentDay <= 15) {
+      phaseKey = "ovulatory";
       phaseName = "Ovulatory Phase";
       icon = "🔥";
       intensity = "Peak (PR Focus)";
-      colorClass = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      colorClass = "text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40";
       progressBg = "bg-amber-500";
       phaseDescription = `Day ${currentDay} of your cycle. Hormones peak, unleashing maximum explosive power.`;
       workoutRecommendation = "You are at your absolute strongest! Perfect time to test personal records (PRs), run max sprints, or do demanding lifting.";
     } else {
+      phaseKey = "luteal";
       phaseName = "Luteal Phase";
       icon = "🍂";
       intensity = "Moderate";
-      colorClass = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+      colorClass = "text-indigo-900 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40";
       progressBg = "bg-indigo-500";
       phaseDescription = `Day ${currentDay} of your cycle. Estrogen decreases as progesterone rises, preparing for rest.`;
       workoutRecommendation = "Focus on endurance, moderate weight volumes, steady state aerobic sessions, and mind-muscle connection.";
     }
 
     return {
+      phaseKey,
       currentDay,
       phaseName,
       phaseDescription,
@@ -471,46 +477,188 @@ export default function DashboardPage() {
     ? getCycleInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28) 
     : null;
 
+  // Selected Tab for cycle info (defaults to active phase)
+  const [selectedPhase, setSelectedPhase] = useState<string>("luteal");
+
+  useEffect(() => {
+    if (cycleInfo) {
+      setSelectedPhase(cycleInfo.phaseKey);
+    }
+  }, [cycleInfo]);
+
+  const cyclePhasesData: Record<string, {
+    name: string;
+    icon: string;
+    intensity: string;
+    hormones: string;
+    nutrition: string;
+    workouts: { name: string; sets: string; reps: string; intensity: string }[];
+  }> = {
+    menstrual: {
+      name: "Menstrual Phase (Days 1-5)",
+      icon: "🌸",
+      intensity: "Low Intensity",
+      hormones: "Estrogen & Progesterone are at their lowest baseline.",
+      nutrition: "Eat iron-rich foods (spinach, lentils, dark chocolate, beetroot) and ginger-chamomile tea to ease cramps.",
+      workouts: [
+        { name: "🧘 Yin Yoga & Deep Stretching", sets: "1", reps: "30 mins", intensity: "Very Gentle" },
+        { name: "🚶 Low Intensity Steady Walking", sets: "1", reps: "20 mins", intensity: "50-60% Max HR" },
+        { name: "✨ Core Stability & Breathing", sets: "2", reps: "10 reps", intensity: "Light Recovery" }
+      ]
+    },
+    follicular: {
+      name: "Follicular Phase (Days 6-13)",
+      icon: "🌱",
+      intensity: "High Intensity",
+      hormones: "Estrogen levels are climbing steadily. Energy & focus peak.",
+      nutrition: "Consume complex carbs (oats, brown rice), lean proteins (tofu, chicken), and cruciferous veggies (broccoli).",
+      workouts: [
+        { name: "🏋️ Barbell/Dumbbell Squats", sets: "4", reps: "8-10 reps", intensity: "75% 1RM" },
+        { name: "🏋️ Push-Ups or Bench Press", sets: "3", reps: "10-12 reps", intensity: "70% 1RM" },
+        { name: "🏃 HIIT Cardio Sprints", sets: "5", reps: "30s work / 60s rest", intensity: "90% Max HR" }
+      ]
+    },
+    ovulatory: {
+      name: "Ovulatory Phase (Days 14-15)",
+      icon: "🔥",
+      intensity: "Peak Intensity",
+      hormones: "Estrogen & LH peak. Body's physical power is maximized.",
+      nutrition: "Focus on fiber-rich fruits (berries, oranges), raw seeds (sesame, pumpkin), and easy-to-digest light proteins.",
+      workouts: [
+        { name: "💥 Deadlifts (PR Focus)", sets: "3", reps: "3-5 reps", intensity: "85% 1RM" },
+        { name: "💥 Kettlebell Swings", sets: "3", reps: "15 reps", intensity: "80% 1RM" },
+        { name: "💥 Explosive Box Jumps", sets: "4", reps: "6 reps", intensity: "Max Power" }
+      ]
+    },
+    luteal: {
+      name: "Luteal Phase (Days 16-28)",
+      icon: "🍂",
+      intensity: "Moderate Intensity",
+      hormones: "Progesterone rises and peaks. Body temperature climbs.",
+      nutrition: "Eat complex carbs (sweet potato), magnesium-rich items (banana, almonds) to fully prevent PMS spikes.",
+      workouts: [
+        { name: "🏃 Steady-State Jog or Cycle", sets: "1", reps: "30-40 mins", intensity: "60-70% Max HR" },
+        { name: "🧘 Pilates Core Workout", sets: "3", reps: "12 reps", intensity: "Moderate Control" },
+        { name: "🏋️ Dumbbell RDLs (Form focus)", sets: "3", reps: "12 reps", intensity: "65% 1RM" }
+      ]
+    }
+  };
+
+  const activePhaseData = cyclePhasesData[selectedPhase] || cyclePhasesData.luteal;
   const weekDiff = thisWeek.length - lastWeek.length;
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-white">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-foreground">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center border-b border-border pb-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{greeting}, {userProfile?.name?.split(" ")[0] || session?.user?.name?.split(" ")[0] || "User"}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{greeting}, {userProfile?.name?.split(" ")[0] || session?.user?.name?.split(" ")[0] || "User"}</h1>
           <p className="text-foreground/60 mt-1">Here is your fitness overview.</p>
         </div>
-        <button onClick={() => signOut({ callbackUrl: "/login" })} className="px-4 py-2 text-sm font-medium border border-border rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Logout</button>
+        <button onClick={() => signOut({ callbackUrl: "/login" })} className="px-4 py-2 text-sm font-semibold border border-border rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-foreground transition-colors cursor-pointer">Logout</button>
       </div>
 
-      {/* Women's Health Widget */}
+      {/* Women's Health Synergy Widget */}
       {cycleInfo && (
-        <div className={`border rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-lg ${cycleInfo.colorClass} animate-in fade-in slide-in-from-top-2 duration-500`}>
-          <div className="flex-1 space-y-2">
+        <div className={`border rounded-2xl p-6 flex flex-col gap-5 shadow-md ${cycleInfo.colorClass} animate-in fade-in slide-in-from-top-2 duration-500`}>
+          
+          {/* Header row with active phase and timeline progress */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{cycleInfo.icon}</span>
-              <span className="font-bold text-lg text-white">{cycleInfo.phaseName}</span>
+              <span className="font-bold text-lg text-current">{cycleInfo.phaseName}</span>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-current bg-current/5">
-                {cycleInfo.intensity} Intensity
+                Current Phase: Day {cycleInfo.currentDay} / {userProfile?.cycleLength || 28}
               </span>
             </div>
-            <p className="text-sm font-semibold leading-relaxed text-white/90">{cycleInfo.workoutRecommendation}</p>
-            <p className="text-xs opacity-70">{cycleInfo.phaseDescription}</p>
-          </div>
-          
-          <div className="w-full md:w-48 shrink-0 space-y-2">
-            <div className="flex justify-between text-xs font-semibold">
-              <span className="opacity-70">Cycle Timeline</span>
-              <span>Day {cycleInfo.currentDay} / {userProfile?.cycleLength || 28}</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-              <div 
-                className={`h-full rounded-full ${cycleInfo.progressBg}`} 
-                style={{ width: `${cycleInfo.percentComplete}%` }}
-              />
+            
+            <div className="w-full md:w-56 space-y-1.5 shrink-0">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="opacity-70">Cycle Timeline</span>
+                <span>Day {cycleInfo.currentDay} of {userProfile?.cycleLength || 28}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-current/10 overflow-hidden">
+                <div 
+                  className={`h-full rounded-full ${cycleInfo.progressBg}`} 
+                  style={{ width: `${cycleInfo.percentComplete}%` }}
+                />
+              </div>
             </div>
           </div>
+
+          {/* Interactive Phase Browser Tabs */}
+          <div className="border-t border-b border-current/10 py-3 mt-1">
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(cyclePhasesData).map((key) => {
+                const isSelected = selectedPhase === key;
+                const isActivePhase = cycleInfo.phaseKey === key;
+                const p = cyclePhasesData[key];
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedPhase(key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isSelected 
+                        ? "bg-current text-white dark:text-zinc-950 font-black shadow-sm" 
+                        : "bg-current/5 hover:bg-current/10 text-current"
+                    }`}
+                  >
+                    <span>{p.icon}</span>
+                    <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    {isActivePhase && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tab Content Display */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-1">
+            
+            {/* Left side: Overview, Hormones, Nutrition */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="space-y-1.5">
+                <h4 className="text-xs uppercase tracking-wider font-bold opacity-60">Phase Overview</h4>
+                <p className="text-sm leading-relaxed text-current font-medium">
+                  {selectedPhase === cycleInfo.phaseKey ? cycleInfo.workoutRecommendation : "Review this biological phase's recommended training structure, nutritional highlights, and physiological focus."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-current/5 p-3.5 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1">📈 Hormone Trends</span>
+                  <p className="text-xs font-semibold leading-relaxed">{activePhaseData.hormones}</p>
+                </div>
+                <div className="rounded-xl bg-current/5 p-3.5 space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1">🥗 Nutrition & Support</span>
+                  <p className="text-xs font-semibold leading-relaxed">{activePhaseData.nutrition}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side: Tailored Gym Exercises */}
+            <div className="lg:col-span-5 space-y-2">
+              <h4 className="text-xs uppercase tracking-wider font-bold opacity-60">Phase-Tailored Gym Program</h4>
+              <div className="space-y-2">
+                {activePhaseData.workouts.map((w, idx) => (
+                  <div key={idx} className="rounded-xl border border-current/10 bg-current/[0.02] p-3 flex justify-between items-center gap-3">
+                    <div>
+                      <p className="text-xs font-bold">{w.name}</p>
+                      <p className="text-[10px] opacity-70 mt-0.5">{w.intensity} Intensity</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-black">{w.sets} sets</p>
+                      <p className="text-[10px] font-semibold opacity-70 mt-0.5">{w.reps}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
         </div>
       )}
 

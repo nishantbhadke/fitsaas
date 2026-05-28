@@ -23,9 +23,19 @@ model User {
   activityLevel   ActivityLevel? @default(MODERATELY_ACTIVE)
   dailyWaterGoal  Int?      @default(2000)
   dailyCalorieGoal Int?     @default(2000)
+  dietPlanEnabled Boolean   @default(false)
+  dietType        DietType  @default(NON_VEGETARIAN)
+  isLactoseIntolerant Boolean @default(false)
+  isGlutenFree    Boolean   @default(false)
   workouts        Workout[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+enum DietType {
+  NON_VEGETARIAN
+  VEGETARIAN
+  VEGAN
 }
 
 enum ActivityLevel {

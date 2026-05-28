@@ -146,17 +146,25 @@ export function AuthLanding() {
                 Open dashboard
               </Link>
             ) : (
-              <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                className="flex h-[52px] items-center justify-center gap-3 rounded-2xl bg-emerald-400 px-6 text-sm font-black text-zinc-950 transition-opacity hover:opacity-90"
-              >
-                <GoogleIcon />
-                Continue with Google
-              </button>
+              <>
+                <button
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  className="flex h-[52px] items-center justify-center gap-3 rounded-2xl bg-emerald-400 px-6 text-sm font-black text-zinc-950 transition-opacity hover:opacity-90 cursor-pointer"
+                >
+                  <GoogleIcon />
+                  Continue with Google
+                </button>
+                <Link
+                  href="/login"
+                  className="flex h-[52px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-6 text-sm font-bold text-white transition-colors hover:bg-white/[0.08]"
+                >
+                  Sign In with Email
+                </Link>
+              </>
             )}
             <button
               onClick={() => setShowTour(true)}
-              className="flex h-[52px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-6 text-sm font-bold text-white transition-colors hover:bg-white/[0.08]"
+              className="flex h-[52px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-6 text-sm font-bold text-white transition-colors hover:bg-white/[0.08] cursor-pointer"
             >
               Short tour of app
             </button>
