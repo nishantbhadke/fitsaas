@@ -320,6 +320,7 @@ export default function DashboardPage() {
   });
 
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchWorkouts = useCallback(async () => {
@@ -334,14 +335,34 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Failed to fetch workouts:", err);
-    } finally {
-      setLoading(false);
+    }
+  }, [session]);
+
+  const fetchProfile = useCallback(async () => {
+    if (!session?.appToken) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/me`, {
+        headers: { Authorization: `Bearer ${(session as any).appToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserProfile(data.user || null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile in dashboard:", err);
     }
   }, [session]);
 
   useEffect(() => {
-    if (status === "authenticated") fetchWorkouts();
-  }, [status, fetchWorkouts]);
+    const initData = async () => {
+      if (status === "authenticated") {
+        setLoading(true);
+        await Promise.all([fetchWorkouts(), fetchProfile()]);
+        setLoading(false);
+      }
+    };
+    initData();
+  }, [status, fetchWorkouts, fetchProfile]);
 
   if (status === "loading") {
     return (
@@ -382,19 +403,116 @@ export default function DashboardPage() {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const mostActiveDay = workouts.length > 0 ? dayNames[maxDayIdx] : "—";
 
-  // Week comparison
+  // Menstrual cycle tracking helper
+  const getCycleInfo = (lastPeriodStartStr: string, cycleLength: number = 28) => {
+    if (!lastPeriodStartStr) return null;
+    const lastPeriodStart = new Date(lastPeriodStartStr);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - lastPeriodStart.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentDay = (diffDays % cycleLength) + 1; // 1-indexed day of cycle
+    
+    let phaseName = "";
+    let phaseDescription = "";
+    let icon = "";
+    let workoutRecommendation = "";
+    let intensity = "";
+    let colorClass = "";
+    let progressBg = "";
+
+    if (currentDay <= 5) {
+      phaseName = "Menstrual Phase";
+      icon = "🌸";
+      intensity = "Low";
+      colorClass = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+      progressBg = "bg-rose-500";
+      phaseDescription = `Day ${currentDay} of your cycle. Progesterone and estrogen are low. Focus on recovery.`;
+      workoutRecommendation = "Honor your body: opt for low-intensity sessions like active recovery, walking, light yoga, or slow steady cardio.";
+    } else if (currentDay <= 13) {
+      phaseName = "Follicular Phase";
+      icon = "🌱";
+      intensity = "High";
+      colorClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      progressBg = "bg-emerald-500";
+      phaseDescription = `Day ${currentDay} of your cycle. Estrogen levels are rising, driving physical stamina.`;
+      workoutRecommendation = "Stamina is climbing! This is an ideal window for high-intensity cardio, hypertrophy, and heavy resistance training.";
+    } else if (currentDay <= 15) {
+      phaseName = "Ovulatory Phase";
+      icon = "🔥";
+      intensity = "Peak (PR Focus)";
+      colorClass = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+      progressBg = "bg-amber-500";
+      phaseDescription = `Day ${currentDay} of your cycle. Hormones peak, unleashing maximum explosive power.`;
+      workoutRecommendation = "You are at your absolute strongest! Perfect time to test personal records (PRs), run max sprints, or do demanding lifting.";
+    } else {
+      phaseName = "Luteal Phase";
+      icon = "🍂";
+      intensity = "Moderate";
+      colorClass = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+      progressBg = "bg-indigo-500";
+      phaseDescription = `Day ${currentDay} of your cycle. Estrogen decreases as progesterone rises, preparing for rest.`;
+      workoutRecommendation = "Focus on endurance, moderate weight volumes, steady state aerobic sessions, and mind-muscle connection.";
+    }
+
+    return {
+      currentDay,
+      phaseName,
+      phaseDescription,
+      icon,
+      workoutRecommendation,
+      intensity,
+      colorClass,
+      progressBg,
+      percentComplete: Math.min(Math.round((currentDay / cycleLength) * 100), 100),
+    };
+  };
+
+  const cycleInfo = userProfile?.gender === "FEMALE" && userProfile?.lastPeriodStart 
+    ? getCycleInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28) 
+    : null;
+
   const weekDiff = thisWeek.length - lastWeek.length;
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-white">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{greeting}, {session?.user?.name?.split(" ")[0] || "User"}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{greeting}, {userProfile?.name?.split(" ")[0] || session?.user?.name?.split(" ")[0] || "User"}</h1>
           <p className="text-foreground/60 mt-1">Here is your fitness overview.</p>
         </div>
         <button onClick={() => signOut({ callbackUrl: "/login" })} className="px-4 py-2 text-sm font-medium border border-border rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Logout</button>
       </div>
+
+      {/* Women's Health Widget */}
+      {cycleInfo && (
+        <div className={`border rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-lg ${cycleInfo.colorClass} animate-in fade-in slide-in-from-top-2 duration-500`}>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{cycleInfo.icon}</span>
+              <span className="font-bold text-lg text-white">{cycleInfo.phaseName}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-current bg-current/5">
+                {cycleInfo.intensity} Intensity
+              </span>
+            </div>
+            <p className="text-sm font-semibold leading-relaxed text-white/90">{cycleInfo.workoutRecommendation}</p>
+            <p className="text-xs opacity-70">{cycleInfo.phaseDescription}</p>
+          </div>
+          
+          <div className="w-full md:w-48 shrink-0 space-y-2">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="opacity-70">Cycle Timeline</span>
+              <span>Day {cycleInfo.currentDay} / {userProfile?.cycleLength || 28}</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+              <div 
+                className={`h-full rounded-full ${cycleInfo.progressBg}`} 
+                style={{ width: `${cycleInfo.percentComplete}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

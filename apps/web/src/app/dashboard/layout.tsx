@@ -7,6 +7,7 @@ const navItems = [
   { href: "/dashboard", label: "Overview", icon: "O" },
   { href: "/dashboard/workouts", label: "Workouts", icon: "W" },
   { href: "/dashboard/progress", label: "Progress", icon: "P" },
+  { href: "/dashboard/profile", label: "Profile", icon: "U" },
 ];
 
 export default function DashboardLayout({

@@ -30,154 +30,6 @@ function ExerciseIcon({ category, size = 24 }: { category: ExerciseCategory; siz
   );
 }
 
-function FlipCard({
-  exercise,
-  onLog,
-}: {
-  exercise: Exercise;
-  onLog: (name: string, duration: string, notes: string) => void;
-}) {
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [isForm, setIsForm] = useState(false);
-  const [duration, setDuration] = useState("");
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const cat = categories.find((c) => c.id === exercise.category);
-
-  const handleLog = async () => {
-    setSubmitting(true);
-    await onLog(exercise.name, duration, notes);
-    setSubmitting(false);
-    setDuration("");
-    setNotes("");
-    setIsForm(false);
-    setIsFlipped(false);
-  };
-
-  return (
-    <div
-      className="group"
-      style={{ perspective: "1000px" }}
-    >
-      <div
-        className="relative w-full transition-transform duration-500 ease-in-out"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-          minHeight: "220px",
-        }}
-      >
-        {/* FRONT */}
-        <div
-          className="absolute inset-0 bg-card border border-border rounded-2xl p-5 flex flex-col cursor-pointer hover:shadow-lg hover:border-brand-500/30 transition-all"
-          style={{ backfaceVisibility: "hidden" }}
-          onClick={() => { setIsFlipped(true); setIsForm(false); }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: `${cat?.color || "#22c55e"}18` }}
-            >
-              <ExerciseIcon category={exercise.category} size={20} />
-            </div>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ color: cat?.color, backgroundColor: `${cat?.color || "#22c55e"}18` }}
-            >
-              {cat?.label}
-            </span>
-          </div>
-          <h3 className="font-semibold text-foreground text-sm mt-auto">{exercise.name}</h3>
-          <p className="text-[11px] text-foreground/40 mt-1">{exercise.muscles}</p>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-foreground/30">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-            Click to learn more
-          </div>
-        </div>
-
-        {/* BACK — Info or Form */}
-        <div
-          className="absolute inset-0 bg-card border border-border rounded-2xl p-5 flex flex-col"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-        >
-          {!isForm ? (
-            <>
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: cat?.bgColor }}>
-                    <ExerciseIcon category={exercise.category} size={16} />
-                  </div>
-                  <h3 className="font-semibold text-sm text-foreground truncate">{exercise.name}</h3>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
-                  className="text-foreground/40 hover:text-foreground text-xs shrink-0"
-                  aria-label={`Close ${exercise.name} details`}
-                >
-                  Close
-                </button>
-              </div>
-              <p className="text-xs text-foreground/60 leading-relaxed flex-1">{exercise.description}</p>
-              <div className="mt-2 mb-3">
-                <span className="text-[10px] font-medium text-foreground/40">TARGETS</span>
-                <p className="text-xs font-medium text-foreground/80 mt-0.5">{exercise.muscles}</p>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsForm(true); }}
-                className="w-full py-2 rounded-xl text-white font-medium text-xs transition-colors"
-                style={{ backgroundColor: cat?.color }}
-              >
-                Log This Workout →
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm text-foreground">{exercise.name}</h3>
-                <button onClick={() => { setIsForm(false); setIsFlipped(false); }} className="text-foreground/40 hover:text-foreground text-xs">✕</button>
-              </div>
-              <div className="flex-1 flex flex-col gap-2">
-                <div>
-                  <label className="text-[10px] font-medium text-foreground/50 uppercase tracking-wider">Duration (min)</label>
-                  <input
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    placeholder="45"
-                    min="1"
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-medium text-foreground/50 uppercase tracking-wider">Notes</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any PRs? How did it feel?"
-                    rows={2}
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
-                  />
-                </div>
-                <div className="text-[10px] text-foreground/30">
-                  ⏱ {new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
-                </div>
-              </div>
-              <button
-                onClick={handleLog}
-                disabled={submitting}
-                className="w-full py-2 rounded-xl text-white font-medium text-xs transition-colors disabled:opacity-50 mt-2"
-                style={{ backgroundColor: cat?.color }}
-              >
-                {submitting ? "Saving..." : "Save Workout"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function WorkoutCard({
   exercise,
   onLog,
@@ -185,25 +37,38 @@ function WorkoutCard({
   exercise: Exercise;
   onLog: (name: string, duration: string, notes: string) => void;
 }) {
-  const [mode, setMode] = useState<"summary" | "details" | "record">("summary");
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const cat = categories.find((c) => c.id === exercise.category);
 
-  const handleLog = async () => {
+  const handleLog = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitting(true);
     await onLog(exercise.name, duration, notes);
     setSubmitting(false);
     setDuration("");
     setNotes("");
-    setMode("summary");
+    setIsFlipped(false);
   };
 
   return (
-    <article className="bg-card border border-border rounded-2xl p-5 flex min-h-[286px] flex-col shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-brand-500/30">
-      {mode !== "record" ? (
-        <>
+    <div className="perspective-1000 w-full relative">
+      <div
+        className={`transform-style-3d transition-transform duration-700 ease-out w-full relative ${
+          isFlipped ? "rotate-y-180" : ""
+        }`}
+      >
+        {/* FRONT FACE */}
+        <article
+          className={`bg-card border border-border rounded-2xl p-5 flex flex-col shadow-sm transition-all hover:shadow-lg hover:border-brand-500/30 backface-hidden ${
+            isFlipped
+              ? "absolute inset-0 opacity-0 pointer-events-none"
+              : "relative w-full h-auto opacity-100"
+          }`}
+        >
           <div className="flex items-start justify-between gap-3">
             <div
               className="w-12 h-12 rounded-2xl flex shrink-0 items-center justify-center"
@@ -212,7 +77,7 @@ function WorkoutCard({
               <ExerciseIcon category={exercise.category} size={22} />
             </div>
             <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
               style={{ color: cat?.color, backgroundColor: `${cat?.color || "#22c55e"}18` }}
             >
               {cat?.label}
@@ -222,51 +87,58 @@ function WorkoutCard({
           <div className="mt-5 flex-1">
             <h3 className="font-semibold text-foreground text-base leading-tight">{exercise.name}</h3>
             <p className="text-xs text-foreground/50 mt-1.5 leading-relaxed">{exercise.muscles}</p>
-            <p className={`text-sm text-foreground/60 mt-4 leading-6 ${mode === "summary" ? "line-clamp-3" : ""}`}>
+            <p className={`text-sm text-foreground/60 mt-4 leading-6 ${!showDetails ? "line-clamp-3" : ""}`}>
               {exercise.description}
             </p>
 
-            {mode === "details" && (
-              <div className="mt-4 rounded-xl border border-border bg-background/60 p-3">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/40">Targets</span>
-                <p className="text-xs font-medium text-foreground/80 mt-1">{exercise.muscles}</p>
+            {showDetails && (
+              <div className="mt-4 rounded-xl border border-border bg-background/60 p-3 animate-in fade-in duration-300">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/45">Targets</span>
+                <p className="text-xs font-semibold text-foreground/80 mt-1">{exercise.muscles}</p>
               </div>
             )}
           </div>
 
           <div className="mt-5 grid grid-cols-[0.85fr_1.15fr] gap-2">
             <button
-              onClick={() => setMode(mode === "details" ? "summary" : "details")}
-              className="h-11 rounded-xl border border-border bg-background text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+              onClick={() => setShowDetails(!showDetails)}
+              className="h-11 rounded-xl border border-border bg-background text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground hover:bg-white/[0.04]"
             >
-              {mode === "details" ? "Less" : "Details"}
+              {showDetails ? "Less" : "Details"}
             </button>
             <button
-              onClick={() => setMode("record")}
+              onClick={() => setIsFlipped(true)}
               className="h-11 rounded-xl text-white font-semibold text-xs transition-colors hover:opacity-90"
               style={{ backgroundColor: cat?.color }}
             >
               Record Workout
             </button>
           </div>
-        </>
-      ) : (
-        <div className="flex min-h-full flex-col">
+        </article>
+
+        {/* BACK FACE (Record Form) */}
+        <article
+          className={`bg-card border border-border rounded-2xl p-5 flex flex-col shadow-lg backface-hidden rotate-y-180 ${
+            isFlipped
+              ? "relative w-full h-auto opacity-100"
+              : "absolute inset-0 opacity-0 pointer-events-none"
+          }`}
+        >
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="min-w-0">
               <h3 className="font-semibold text-base text-foreground truncate">{exercise.name}</h3>
               <p className="text-xs text-foreground/45 mt-1">Record your session</p>
             </div>
             <button
-              onClick={() => setMode("summary")}
+              onClick={() => setIsFlipped(false)}
               className="text-foreground/40 hover:text-foreground text-sm shrink-0"
               aria-label={`Close ${exercise.name} record form`}
             >
-              Close
+              ✕
             </button>
           </div>
 
-          <div className="flex-1 flex flex-col gap-4">
+          <form onSubmit={handleLog} className="flex-1 flex flex-col gap-4">
             <div>
               <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Duration (min)</label>
               <input
@@ -275,7 +147,8 @@ function WorkoutCard({
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="45"
                 min="1"
-                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                required
               />
             </div>
             <div>
@@ -285,22 +158,22 @@ function WorkoutCard({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Sets, reps, PRs, or how it felt"
                 rows={3}
-                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40 resize-none"
+                className="w-full mt-2 px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"
               />
             </div>
-          </div>
 
-          <button
-            onClick={handleLog}
-            disabled={submitting}
-            className="w-full h-11 rounded-xl text-white font-semibold text-xs transition-colors disabled:opacity-50 mt-5 hover:opacity-90"
-            style={{ backgroundColor: cat?.color }}
-          >
-            {submitting ? "Saving..." : "Save Workout Record"}
-          </button>
-        </div>
-      )}
-    </article>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-11 rounded-xl text-white font-semibold text-xs transition-all disabled:opacity-50 mt-2 hover:opacity-90"
+              style={{ backgroundColor: cat?.color }}
+            >
+              {submitting ? "Saving..." : "Save Workout Record"}
+            </button>
+          </form>
+        </article>
+      </div>
+    </div>
   );
 }
 

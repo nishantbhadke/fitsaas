@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 function GoogleIcon() {
@@ -16,11 +16,10 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,25 +27,48 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please enter both email and password.");
+    if (!name || !email || !password) {
+      setError("Please fill in all fields.");
       return;
     }
     setError(null);
     setSubmitting(true);
 
     try {
+      // 1. Post to our Fastify backend registration endpoint
+      const registerRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      const registerData = await registerRes.json();
+
+      if (!registerRes.ok) {
+        setError(registerData.error || "Failed to create account. Email may already be registered.");
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. Automatically log them in after registration
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
-        callbackUrl,
+        callbackUrl: "/dashboard",
       });
 
       if (res?.error) {
-        setError("Invalid email or password.");
+        setError("Account created, but automatic sign in failed. Please sign in manually.");
+        router.push("/login");
       } else {
-        router.push(callbackUrl);
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {
@@ -68,8 +90,8 @@ export default function LoginPage() {
               <div className="text-xs uppercase tracking-[0.24em] text-white/40">Command Center</div>
             </div>
           </Link>
-          <h2 className="mt-8 text-2xl font-bold tracking-tight text-white text-center">Welcome Back</h2>
-          <p className="mt-2 text-sm text-white/60 text-center">Sign in to your fitness command center</p>
+          <h2 className="mt-8 text-2xl font-bold tracking-tight text-white text-center">Create Account</h2>
+          <p className="mt-2 text-sm text-white/60 text-center">Join FitSaaS and track your physical growth</p>
         </div>
 
         {error && (
@@ -79,6 +101,18 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nishant Bhadke"
+              className="w-full h-[52px] px-4 rounded-2xl border border-white/10 bg-white/[0.04] text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white/[0.06] transition-all"
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-white/40 mb-2">Email Address</label>
             <input
@@ -108,7 +142,7 @@ export default function LoginPage() {
             disabled={submitting}
             className="w-full h-[52px] flex items-center justify-center rounded-2xl bg-emerald-400 text-sm font-black text-zinc-950 transition-all hover:opacity-90 disabled:opacity-50 mt-6"
           >
-            {submitting ? "Signing in..." : "Sign In"}
+            {submitting ? "Creating account..." : "Register Free"}
           </button>
         </form>
 
@@ -122,17 +156,17 @@ export default function LoginPage() {
         </div>
 
         <button
-          onClick={() => signIn("google", { callbackUrl })}
+          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-bold text-white transition-all hover:bg-white/[0.08]"
         >
           <GoogleIcon />
-          Sign in with Google
+          Sign up with Google
         </button>
 
         <p className="mt-8 text-center text-sm text-white/40">
-          Don't have an account?{" "}
-          <Link href="/register" className="font-bold text-emerald-400 hover:underline">
-            Register for free
+          Already have an account?{" "}
+          <Link href="/login" className="font-bold text-emerald-400 hover:underline">
+            Sign in
           </Link>
         </p>
       </div>
