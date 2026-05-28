@@ -375,6 +375,7 @@ function ProfileContent() {
                   max={todayStr}
                   onChange={(e) => setBirthDate(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
+                  required
                 />
               </div>
             </div>
@@ -394,6 +395,7 @@ function ProfileContent() {
                   max="250"
                   step="1"
                   className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
+                  required
                 />
               </div>
 
@@ -411,6 +413,7 @@ function ProfileContent() {
                   min="0"
                   max="300"
                   className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all placeholder:text-foreground/30"
+                  required
                 />
               </div>
             </div>
@@ -421,6 +424,7 @@ function ProfileContent() {
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
                 className="w-full h-11 px-4 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                required
               >
                 <option value="" disabled className="bg-card">Select gender...</option>
                 <option value="MALE" className="bg-card">Male</option>
