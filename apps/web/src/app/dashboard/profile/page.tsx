@@ -1,16 +1,19 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { redirect, useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { data: session, update: updateSession, status } = useSession({
     required: true,
     onUnauthenticated() {
       redirect("/login");
     },
   });
+
+  const searchParams = useSearchParams();
+  const isOnboarding = searchParams?.get("onboarding") === "true";
 
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
@@ -135,7 +138,15 @@ export default function ProfilePage() {
           }
         });
         setToast("✨ Profile successfully synced!");
-        setTimeout(() => setToast(null), 3000);
+        
+        // If they completed onboarding, take them straight to dashboard now!
+        if (isOnboarding) {
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1500);
+        } else {
+          setTimeout(() => setToast(null), 3000);
+        }
       } else {
         const errorData = await res.json();
         setToast(`❌ Failed: ${errorData.error || "Update rejected."}`);
@@ -275,6 +286,21 @@ export default function ProfilePage() {
       {toast && (
         <div className="fixed top-6 right-6 z-50 bg-card border border-brand-500/30 shadow-xl rounded-xl px-5 py-3 text-sm font-medium text-foreground animate-in fade-in slide-in-from-top-2 duration-300">
           {toast}
+        </div>
+      )}
+
+      {/* Onboarding Welcome Panel */}
+      {isOnboarding && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-emerald-500 dark:text-emerald-400 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">👋</span>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold uppercase tracking-wider">Welcome to FitSaaS! Let's calibrate your dashboard</h3>
+              <p className="text-xs leading-relaxed text-emerald-600 dark:text-emerald-400/80">
+                Please complete your personal characteristics below. We use these metrics to dynamically calibrate your daily calorie/water targets, target weight milestone forecasts, tailored Indian high-protein diets, and phase-specific cycle workouts. You can always update these details later!
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -636,5 +662,17 @@ export default function ProfilePage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center p-16">
+        <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }

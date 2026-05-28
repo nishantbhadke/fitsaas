@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Workout {
@@ -353,6 +353,8 @@ export default function DashboardPage() {
     }
   }, [session]);
 
+  const router = useRouter();
+
   useEffect(() => {
     const initData = async () => {
       if (status === "authenticated") {
@@ -363,6 +365,20 @@ export default function DashboardPage() {
     };
     initData();
   }, [status, fetchWorkouts, fetchProfile]);
+
+  useEffect(() => {
+    if (userProfile && !loading) {
+      const isProfileIncomplete = 
+        !userProfile.gender || 
+        !userProfile.weight || 
+        !userProfile.height || 
+        !userProfile.birthDate;
+
+      if (isProfileIncomplete) {
+        router.push("/dashboard/profile?onboarding=true");
+      }
+    }
+  }, [userProfile, loading, router]);
 
   if (status === "loading") {
     return (
