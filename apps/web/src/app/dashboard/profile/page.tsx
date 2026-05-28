@@ -53,15 +53,25 @@ function ProfileContent() {
         setImage(u.image || "");
         setGender(u.gender || "");
         setCycleLength(u.cycleLength || 28);
+        
         if (u.lastPeriodStart) {
-          setLastPeriodStart(new Date(u.lastPeriodStart).toISOString().split("T")[0]);
+          const d = new Date(u.lastPeriodStart);
+          if (!isNaN(d.getTime())) {
+            setLastPeriodStart(d.toISOString().split("T")[0]);
+          }
         }
+        
         setWeight(u.weight ? u.weight.toString() : "");
         setHeight(u.height ? u.height.toString() : "");
         setTargetWeight(u.targetWeight ? u.targetWeight.toString() : "");
+        
         if (u.birthDate) {
-          setBirthDate(new Date(u.birthDate).toISOString().split("T")[0]);
+          const d = new Date(u.birthDate);
+          if (!isNaN(d.getTime())) {
+            setBirthDate(d.toISOString().split("T")[0]);
+          }
         }
+        
         setActivityLevel(u.activityLevel || "MODERATELY_ACTIVE");
         setDailyWaterGoal(u.dailyWaterGoal || 2000);
         setDailyCalorieGoal(u.dailyCalorieGoal || 2000);
@@ -130,13 +140,11 @@ function ProfileContent() {
 
       if (res.ok) {
         const data = await res.json();
-        await updateSession({
-          ...session,
-          user: {
-            ...session.user,
-            ...data.user,
-          }
-        });
+        try {
+          await updateSession();
+        } catch (sessErr) {
+          console.error("Session update error:", sessErr);
+        }
         setToast("✨ Profile successfully synced!");
         
         // If they completed onboarding, take them straight to dashboard now!
