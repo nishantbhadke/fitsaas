@@ -594,7 +594,6 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{greeting}, {userProfile?.name?.split(" ")[0] || session?.user?.name?.split(" ")[0] || "User"}</h1>
           <p className="text-foreground/60 mt-1">Here is your fitness overview.</p>
         </div>
-        <button onClick={() => signOut({ callbackUrl: "/login" })} className="px-4 py-2 text-sm font-semibold border border-border rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-foreground transition-colors cursor-pointer">Logout</button>
       </div>
 
       {/* Onboarding Alert Banner */}

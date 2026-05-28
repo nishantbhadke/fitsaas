@@ -269,6 +269,15 @@ function CustomWorkoutCard({
   );
 }
 
+const muscleGroups = [
+  { id: "chest", label: "Chest", keywords: ["Chest", "Pecs"] },
+  { id: "back", label: "Back & Lats", keywords: ["Back", "Lats", "Lats,", "Mid Back"] },
+  { id: "shoulders", label: "Shoulders", keywords: ["Shoulders", "Delts", "Front Delts", "Rear Delts"] },
+  { id: "arms", label: "Arms & Triceps", keywords: ["Biceps", "Triceps", "Arms", "Upper Body"] },
+  { id: "legs", label: "Legs & Calves", keywords: ["Quads", "Glutes", "Hamstrings", "Legs", "Calves"] },
+  { id: "core", label: "Core & Abs", keywords: ["Core", "Abs"] },
+];
+
 export default function WorkoutsPage() {
   const { data: session, status } = useSession({
     required: true,
@@ -282,6 +291,7 @@ export default function WorkoutsPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [shareWorkout, setShareWorkout] = useState<any>(null);
+  const [selectedMuscle, setSelectedMuscle] = useState<string>("all");
 
   const fetchWorkouts = useCallback(async () => {
     if (!session?.appToken) return;
@@ -362,7 +372,16 @@ export default function WorkoutsPage() {
     }
   };
 
-  const filtered = activeCategory === "all" ? exercises : exercises.filter((e) => e.category === activeCategory);
+  const filteredByCategory = activeCategory === "all" ? exercises : exercises.filter((e) => e.category === activeCategory);
+
+  const filtered = selectedMuscle === "all"
+    ? filteredByCategory
+    : filteredByCategory.filter((e) => {
+        const exerciseMuscles = e.muscles.toLowerCase();
+        const targetGroup = muscleGroups.find((m) => m.id === selectedMuscle);
+        if (!targetGroup) return true;
+        return targetGroup.keywords.some((k) => exerciseMuscles.includes(k.toLowerCase()));
+      });
 
   if (status === "loading") {
     return (
@@ -389,41 +408,203 @@ export default function WorkoutsPage() {
         </p>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
-          onClick={() => setActiveCategory("all")}
-          className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-            activeCategory === "all"
-              ? "bg-foreground text-background shadow-sm"
-              : "bg-card border border-border text-foreground/60 hover:text-foreground hover:border-foreground/20"
-          }`}
-        >
-          All Exercises
-        </button>
-        {categories.filter(c => c.id !== "custom").map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              activeCategory === cat.id
-                ? "shadow-sm"
-                : "bg-card border border-border text-foreground/60 hover:text-foreground hover:border-foreground/20"
-            }`}
-            style={activeCategory === cat.id ? { backgroundColor: cat.bgColor, color: cat.color, borderColor: cat.color + "40" } : {}}
-          >
-            <ExerciseIcon category={cat.id} size={14} />
-            {cat.label}
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left Column: Exercises & Categories */}
+        <div className="flex-1 w-full space-y-6">
+          {/* Category Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                activeCategory === "all"
+                  ? "bg-foreground text-background shadow-sm"
+                  : "bg-card border border-border text-foreground/60 hover:text-foreground hover:border-foreground/20"
+              }`}
+            >
+              All Exercises
+            </button>
+            {categories.filter(c => c.id !== "custom").map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeCategory === cat.id
+                    ? "shadow-sm"
+                    : "bg-card border border-border text-foreground/60 hover:text-foreground hover:border-foreground/20"
+                }`}
+                style={activeCategory === cat.id ? { backgroundColor: cat.bgColor, color: cat.color, borderColor: cat.color + "40" } : {}}
+              >
+                <ExerciseIcon category={cat.id} size={14} />
+                {cat.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Exercise Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map((exercise) => (
-          <WorkoutCard key={exercise.id} exercise={exercise} onLog={handleLog} />
-        ))}
-        <CustomWorkoutCard onLog={handleLog} />
+          {/* Exercise Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {filtered.map((exercise) => (
+              <WorkoutCard key={exercise.id} exercise={exercise} onLog={handleLog} />
+            ))}
+            <CustomWorkoutCard onLog={handleLog} />
+          </div>
+        </div>
+
+        {/* Right Column: Interactive Body Map */}
+        <div className="w-full lg:w-80 bg-card border border-border rounded-2xl p-5 shrink-0 shadow-sm flex flex-col items-center gap-5">
+          <div className="w-full text-left">
+            <h2 className="text-base font-bold text-foreground">Interactive Muscle Filter</h2>
+            <p className="text-xs text-foreground/50 mt-1">Select a muscle group to filter exercises.</p>
+          </div>
+
+          {/* Interactive Body Map SVG */}
+          <div className="relative w-full flex justify-center py-2 bg-background/30 dark:bg-background/10 rounded-xl border border-border/40">
+            <svg width="150" height="260" viewBox="0 0 120 180" className="select-none">
+              {/* Head */}
+              <circle 
+                cx="60" cy="18" r="9" 
+                className="transition-all duration-200 fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10 cursor-pointer"
+                strokeWidth="1.5"
+              />
+              {/* Neck */}
+              <rect 
+                x="57" y="27" width="6" height="5" rx="1" 
+                className="fill-foreground/10 stroke-foreground/20"
+                strokeWidth="1.5"
+              />
+
+              {/* Shoulders */}
+              <path 
+                d="M 37 38 L 47 32 L 73 32 L 83 38 Z"
+                onClick={() => setSelectedMuscle(selectedMuscle === "shoulders" ? "all" : "shoulders")}
+                className={`transition-all duration-200 cursor-pointer stroke-2 ${
+                  selectedMuscle === "shoulders"
+                    ? "fill-brand-500/20 stroke-brand-500"
+                    : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                }`}
+              />
+
+              {/* Chest */}
+              <g 
+                onClick={() => setSelectedMuscle(selectedMuscle === "chest" ? "all" : "chest")}
+                className="cursor-pointer"
+              >
+                <rect 
+                  x="44" y="38" width="15" height="15" rx="2" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "chest" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+                <rect 
+                  x="61" y="38" width="15" height="15" rx="2" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "chest" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+              </g>
+
+              {/* Arms (Biceps/Triceps) */}
+              <g 
+                onClick={() => setSelectedMuscle(selectedMuscle === "arms" ? "all" : "arms")}
+                className="cursor-pointer"
+              >
+                {/* Left Arm */}
+                <rect 
+                  x="26" y="42" width="9" height="36" rx="4" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "arms" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+                {/* Right Arm */}
+                <rect 
+                  x="85" y="42" width="9" height="36" rx="4" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "arms" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+              </g>
+
+              {/* Core / Abs */}
+              <rect 
+                x="44" y="56" width="32" height="24" rx="3" 
+                onClick={() => setSelectedMuscle(selectedMuscle === "core" ? "all" : "core")}
+                className={`transition-all duration-200 cursor-pointer stroke-1.5 ${
+                  selectedMuscle === "core"
+                    ? "fill-brand-500/20 stroke-brand-500"
+                    : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                }`}
+              />
+
+              {/* Back & Lats (Behind arms, overlay outline indicator) */}
+              <path 
+                d="M 39 42 Q 33 55 42 66 L 78 66 Q 87 55 81 42 Z"
+                onClick={() => setSelectedMuscle(selectedMuscle === "back" ? "all" : "back")}
+                className={`transition-all duration-200 cursor-pointer stroke-1.5 fill-transparent ${
+                  selectedMuscle === "back"
+                    ? "fill-brand-500/20 stroke-brand-500 stroke-2"
+                    : "stroke-foreground/10 hover:stroke-brand-500/50 hover:fill-brand-500/5"
+                }`}
+              />
+
+              {/* Legs */}
+              <g 
+                onClick={() => setSelectedMuscle(selectedMuscle === "legs" ? "all" : "legs")}
+                className="cursor-pointer"
+              >
+                {/* Left Leg */}
+                <rect 
+                  x="43" y="84" width="15" height="54" rx="5" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "legs" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+                {/* Right Leg */}
+                <rect 
+                  x="62" y="84" width="15" height="54" rx="5" 
+                  className={`transition-all duration-200 stroke-1.5 ${
+                    selectedMuscle === "legs" ? "fill-brand-500/20 stroke-brand-500" : "fill-foreground/10 stroke-foreground/20 hover:stroke-brand-500 hover:fill-brand-500/10"
+                  }`}
+                />
+              </g>
+            </svg>
+          </div>
+
+          {/* Quick List Selector Badges */}
+          <div className="w-full flex flex-col gap-2">
+            <button
+              onClick={() => setSelectedMuscle("all")}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all text-left flex justify-between items-center cursor-pointer ${
+                selectedMuscle === "all"
+                  ? "bg-foreground text-background border-foreground font-black shadow-sm"
+                  : "bg-background/50 hover:bg-black/5 dark:hover:bg-white/5 border-border text-foreground/75"
+              }`}
+            >
+              <span>⭐ All Muscle Groups</span>
+              <span className="text-[10px] opacity-60">({filteredByCategory.length})</span>
+            </button>
+            {muscleGroups.map((m) => {
+              // Count matching exercises inside the currently active category
+              const count = filteredByCategory.filter((e) => {
+                const exerciseMuscles = e.muscles.toLowerCase();
+                return m.keywords.some((k) => exerciseMuscles.includes(k.toLowerCase()));
+              }).length;
+
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedMuscle(selectedMuscle === m.id ? "all" : m.id)}
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all text-left flex justify-between items-center cursor-pointer ${
+                    selectedMuscle === m.id
+                      ? "bg-brand-500 text-white border-brand-500 font-black shadow-sm"
+                      : "bg-background/50 hover:bg-black/5 dark:hover:bg-white/5 border-border text-foreground/75"
+                  }`}
+                >
+                  <span>{m.label}</span>
+                  <span className="text-[10px] opacity-60">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Recent Logs */}
