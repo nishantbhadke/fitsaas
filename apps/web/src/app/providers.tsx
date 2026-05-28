@@ -1,10 +1,11 @@
 "use client";
 
 import { SessionProvider, useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function SessionControl() {
   const { data: session, status } = useSession();
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // 1. Redeployment Auto-Logout Detection
   useEffect(() => {
@@ -67,19 +68,46 @@ function SessionControl() {
   // 3. Backend Auth Token Missing Guard (Failed Sync or server down)
   useEffect(() => {
     if (status === "authenticated" && !session?.appToken) {
-      // Allow a brief grace period (e.g. 2.5 seconds) for session token synchronization to resolve.
+      setIsSyncing(true);
+      // Allow a brief grace period (5 seconds) for session token synchronization to resolve.
       // This prevents race conditions on first-time login where status becomes "authenticated"
       // while the backend database synchronization callback is still in progress.
       const timer = setTimeout(() => {
         if (!session?.appToken) {
           console.warn("Backend auth token is missing in session after grace period. Forcing clean signout.");
+          setIsSyncing(false);
           signOut({ callbackUrl: "/login?error=sync_failed" });
         }
-      }, 2500);
+      }, 5000);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      setIsSyncing(false);
     }
   }, [session, status]);
+
+  if (isSyncing) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#09090b]/80 backdrop-blur-md text-white select-none">
+        <div className="flex flex-col items-center gap-6 max-w-sm px-6 text-center">
+          {/* Animated Spinner with Pulsing Core */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full border-4 border-emerald-500/10 border-t-emerald-400 animate-spin duration-700" />
+            <div className="absolute w-6 h-6 rounded-full bg-emerald-500/15 blur-sm animate-pulse" />
+          </div>
+          
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold tracking-tight text-white">Synchronizing Command Center</h3>
+            <p className="text-[11px] text-white/50 leading-relaxed">
+              Establishing a secure connection and loading your fitness analytics. Please hold on a moment...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return null;
 }
