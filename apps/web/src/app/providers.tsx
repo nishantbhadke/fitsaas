@@ -64,6 +64,14 @@ function SessionControl() {
     };
   }, [status]);
 
+  // 3. Backend Auth Token Missing Guard (Failed Sync or server down)
+  useEffect(() => {
+    if (status === "authenticated" && !session?.appToken) {
+      console.warn("Backend auth token is missing in session. Forcing clean signout.");
+      signOut({ callbackUrl: "/login?error=sync_failed" });
+    }
+  }, [session, status]);
+
   return null;
 }
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 
 function GoogleIcon() {
   return (
@@ -25,6 +25,19 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const err = searchParams?.get("error");
+    if (err) {
+      if (err === "sync_failed") {
+        setError("Backend synchronization failed. Please verify that the API server is online.");
+      } else if (err === "SessionRequired" || err === "CredentialsSignin") {
+        setError("Authentication session has expired. Please sign in again.");
+      } else {
+        setError("Sign in sync rejected by server. Please try again.");
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
