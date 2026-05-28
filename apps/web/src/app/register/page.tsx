@@ -66,10 +66,9 @@ export default function RegisterPage() {
 
       if (res?.error) {
         setError("Account created, but automatic sign in failed. Please sign in manually.");
-        router.push("/login");
+        window.location.href = "/login";
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       console.error(err);
