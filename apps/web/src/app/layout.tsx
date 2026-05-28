@@ -11,6 +11,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FitSaaS - Fitness Tracking Ecosystem",
   description: "A premium minimalist fitness tracking app",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FitSaaS",
+  },
 };
 
 export default function RootLayout({

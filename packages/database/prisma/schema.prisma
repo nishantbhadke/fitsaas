@@ -12,12 +12,27 @@ model User {
   email           String    @unique
   password        String
   name            String?
+  image           String?
   gender          Gender?
   cycleLength     Int?      @default(28)
   lastPeriodStart DateTime?
+  weight          Float?
+  height          Float?
+  targetWeight    Float?
+  birthDate       DateTime?
+  activityLevel   ActivityLevel? @default(MODERATELY_ACTIVE)
+  dailyWaterGoal  Int?      @default(2000)
+  dailyCalorieGoal Int?     @default(2000)
   workouts        Workout[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
 }
 
 enum Gender {

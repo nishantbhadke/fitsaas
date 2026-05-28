@@ -58,6 +58,7 @@ const handler = NextAuth({
               body: JSON.stringify({
                 email: user.email,
                 name: user.name,
+                image: user.image,
               }),
             });
             const data = await res.json();

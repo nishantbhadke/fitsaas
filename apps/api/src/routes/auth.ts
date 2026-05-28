@@ -3,17 +3,31 @@ import { prisma } from 'database';
 import crypto from 'crypto';
 
 export default async function authRoutes(server: FastifyInstance) {
+  const serializeUser = (user: any) => ({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    image: user.image,
+    gender: user.gender,
+    cycleLength: user.cycleLength,
+    lastPeriodStart: user.lastPeriodStart,
+    weight: user.weight,
+    height: user.height,
+    targetWeight: user.targetWeight,
+    birthDate: user.birthDate,
+    activityLevel: user.activityLevel,
+    dailyWaterGoal: user.dailyWaterGoal,
+    dailyCalorieGoal: user.dailyCalorieGoal,
+  });
+
   server.post('/register', async (request, reply) => {
     const { email, password, name } = request.body as any;
     
-    // Minimal validation
     if (!email || !password) {
       return reply.status(400).send({ error: 'Email and password are required' });
     }
 
     try {
-      // In production, ALWAYS hash passwords (e.g. bcrypt)
-      // Keeping it simple here for the prototype as requested.
       const user = await prisma.user.create({
         data: {
           email,
@@ -23,7 +37,7 @@ export default async function authRoutes(server: FastifyInstance) {
       });
 
       const token = server.jwt.sign({ id: user.id, email: user.email });
-      return { token, user: { id: user.id, email: user.email, name: user.name, gender: user.gender, cycleLength: user.cycleLength, lastPeriodStart: user.lastPeriodStart } };
+      return { token, user: serializeUser(user) };
     } catch (error) {
       server.log.error(error);
       return reply.status(500).send({ error: 'User could not be created' });
@@ -40,11 +54,11 @@ export default async function authRoutes(server: FastifyInstance) {
     }
 
     const token = server.jwt.sign({ id: user.id, email: user.email });
-    return { token, user: { id: user.id, email: user.email, name: user.name, gender: user.gender, cycleLength: user.cycleLength, lastPeriodStart: user.lastPeriodStart } };
+    return { token, user: serializeUser(user) };
   });
 
   server.post('/google', async (request, reply) => {
-    const { email, name } = request.body as any;
+    const { email, name, image } = request.body as any;
 
     if (!email) {
       return reply.status(400).send({ error: 'Email is required for Google login' });
@@ -54,19 +68,24 @@ export default async function authRoutes(server: FastifyInstance) {
       let user = await prisma.user.findUnique({ where: { email } });
 
       if (!user) {
-        // Create user with a random password since they use Google
         const randomPassword = crypto.randomBytes(16).toString('hex');
         user = await prisma.user.create({
           data: {
             email,
             password: randomPassword,
             name: name || '',
+            image: image || null,
           },
+        });
+      } else if (image && user.image !== image) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { image },
         });
       }
 
       const token = server.jwt.sign({ id: user.id, email: user.email });
-      return { token, user: { id: user.id, email: user.email, name: user.name, gender: user.gender, cycleLength: user.cycleLength, lastPeriodStart: user.lastPeriodStart } };
+      return { token, user: serializeUser(user) };
     } catch (error) {
       server.log.error(error);
       return reply.status(500).send({ error: 'Authentication failed' });
@@ -81,12 +100,24 @@ export default async function authRoutes(server: FastifyInstance) {
     if (!dbUser) {
       return reply.status(404).send({ error: 'User not found' });
     }
-    return { user: { id: dbUser.id, email: dbUser.email, name: dbUser.name, gender: dbUser.gender, cycleLength: dbUser.cycleLength, lastPeriodStart: dbUser.lastPeriodStart } };
+    return { user: serializeUser(dbUser) };
   });
 
   server.put('/profile', { preHandler: [server.authenticate] }, async (request, reply) => {
     const user = (request as any).user;
-    const { name, gender, cycleLength, lastPeriodStart } = request.body as any;
+    const { 
+      name, 
+      gender, 
+      cycleLength, 
+      lastPeriodStart,
+      weight,
+      height,
+      targetWeight,
+      birthDate,
+      activityLevel,
+      dailyWaterGoal,
+      dailyCalorieGoal
+    } = request.body as any;
 
     try {
       const updatedUser = await prisma.user.update({
@@ -94,11 +125,18 @@ export default async function authRoutes(server: FastifyInstance) {
         data: {
           name: name || undefined,
           gender: gender || null,
-          cycleLength: cycleLength ? parseInt(cycleLength) : null,
-          lastPeriodStart: lastPeriodStart ? new Date(lastPeriodStart) : null,
+          cycleLength: gender === "FEMALE" ? (cycleLength ? parseInt(cycleLength) : null) : null,
+          lastPeriodStart: gender === "FEMALE" ? (lastPeriodStart ? new Date(lastPeriodStart) : null) : null,
+          weight: weight ? parseFloat(weight) : null,
+          height: height ? parseFloat(height) : null,
+          targetWeight: targetWeight ? parseFloat(targetWeight) : null,
+          birthDate: birthDate ? new Date(birthDate) : null,
+          activityLevel: activityLevel || null,
+          dailyWaterGoal: dailyWaterGoal ? parseInt(dailyWaterGoal) : null,
+          dailyCalorieGoal: dailyCalorieGoal ? parseInt(dailyCalorieGoal) : null,
         },
       });
-      return { user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, gender: updatedUser.gender, cycleLength: updatedUser.cycleLength, lastPeriodStart: updatedUser.lastPeriodStart } };
+      return { user: serializeUser(updatedUser) };
     } catch (error) {
       server.log.error(error);
       return reply.status(500).send({ error: 'Failed to update profile' });
