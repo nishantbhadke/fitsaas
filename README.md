@@ -46,12 +46,12 @@ graph TD
 
     subgraph ServiceLayer ["Service Layer (apps/api)"]
         Fastify[Fastify 4 Server]:::api
-        JWT[@fastify/jwt Guard]:::auth
+        JWT["@fastify/jwt Guard"]:::auth
     end
 
     subgraph DatabaseLayer ["Database Layer (packages/database)"]
         Prisma[Prisma Client ORM]:::db
-        NeonDB[(Neon Serverless PostgreSQL)]:::db
+        NeonDB[("Neon Serverless PostgreSQL")]:::db
     end
 
     Web --> NextAuth
