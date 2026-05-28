@@ -320,6 +320,76 @@ function ConsistencyHeatmap({ workouts }: { workouts: Workout[] }) {
   );
 }
 
+/* ─── Menstrual Cycle Tracking Helper ─── */
+const getCycleInfo = (lastPeriodStartStr: string, cycleLength: number = 28) => {
+  if (!lastPeriodStartStr) return null;
+  const lastPeriodStart = new Date(lastPeriodStartStr);
+  const today = new Date();
+  const diffTime = Math.abs(today.getTime() - lastPeriodStart.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const currentDay = (diffDays % cycleLength) + 1; // 1-indexed day of cycle
+  
+  let phaseName = "";
+  let phaseDescription = "";
+  let icon = "";
+  let workoutRecommendation = "";
+  let intensity = "";
+  let colorClass = "";
+  let progressBg = "";
+  let phaseKey = "";
+
+  if (currentDay <= 5) {
+    phaseName = "Menstrual Phase";
+    icon = "🌸";
+    intensity = "Low";
+    colorClass = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+    progressBg = "bg-rose-500";
+    phaseDescription = `Day ${currentDay} of your cycle. Progesterone and estrogen are low. Focus on recovery.`;
+    workoutRecommendation = "Honor your body: opt for low-intensity sessions like active recovery, walking, light yoga, or slow steady cardio.";
+    phaseKey = "menstrual";
+  } else if (currentDay <= 13) {
+    phaseName = "Follicular Phase";
+    icon = "🌱";
+    intensity = "High";
+    colorClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+    progressBg = "bg-emerald-500";
+    phaseDescription = `Day ${currentDay} of your cycle. Estrogen levels are rising, driving physical stamina.`;
+    workoutRecommendation = "Stamina is climbing! This is an ideal window for high-intensity cardio, hypertrophy, and heavy resistance training.";
+    phaseKey = "follicular";
+  } else if (currentDay <= 15) {
+    phaseName = "Ovulatory Phase";
+    icon = "🔥";
+    intensity = "Peak (PR Focus)";
+    colorClass = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+    progressBg = "bg-amber-500";
+    phaseDescription = `Day ${currentDay} of your cycle. Hormones peak, unleashing maximum explosive power.`;
+    workoutRecommendation = "You are at your absolute strongest! Perfect time to test personal records (PRs), run max sprints, or do demanding lifting.";
+    phaseKey = "ovulatory";
+  } else {
+    phaseName = "Luteal Phase";
+    icon = "🍂";
+    intensity = "Moderate";
+    colorClass = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+    progressBg = "bg-indigo-500";
+    phaseDescription = `Day ${currentDay} of your cycle. Estrogen decreases as progesterone rises, preparing for rest.`;
+    workoutRecommendation = "Focus on endurance, moderate weight volumes, steady state aerobic sessions, and mind-muscle connection.";
+    phaseKey = "luteal";
+  }
+
+  return {
+    currentDay,
+    phaseName,
+    phaseDescription,
+    icon,
+    workoutRecommendation,
+    intensity,
+    colorClass,
+    progressBg,
+    phaseKey,
+    percentComplete: Math.min(Math.round((currentDay / cycleLength) * 100), 100),
+  };
+};
+
 /* ─── Main Dashboard ─── */
 export default function DashboardPage() {
   const { data: session, status } = useSession({
@@ -330,6 +400,18 @@ export default function DashboardPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const cycleInfo = userProfile?.gender === "FEMALE" && userProfile?.lastPeriodStart 
+    ? getCycleInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28) 
+    : null;
+
+  const [selectedPhase, setSelectedPhase] = useState<string>("luteal");
+
+  useEffect(() => {
+    if (cycleInfo) {
+      setSelectedPhase(cycleInfo.phaseKey);
+    }
+  }, [cycleInfo]);
 
   const fetchWorkouts = useCallback(async () => {
     if (!session?.appToken) return;
@@ -441,88 +523,7 @@ export default function DashboardPage() {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const mostActiveDay = workouts.length > 0 && maxDayIdx >= 0 ? dayNames[maxDayIdx] : "—";
 
-  // Menstrual cycle tracking helper
-  const getCycleInfo = (lastPeriodStartStr: string, cycleLength: number = 28) => {
-    if (!lastPeriodStartStr) return null;
-    const lastPeriodStart = new Date(lastPeriodStartStr);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - lastPeriodStart.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const currentDay = (diffDays % cycleLength) + 1; // 1-indexed day of cycle
-    
-    let phaseKey = "luteal";
-    let phaseName = "";
-    let phaseDescription = "";
-    let icon = "";
-    let workoutRecommendation = "";
-    let intensity = "";
-    let colorClass = "";
-    let progressBg = "";
 
-    if (currentDay <= 5) {
-      phaseKey = "menstrual";
-      phaseName = "Menstrual Phase";
-      icon = "🌸";
-      intensity = "Low";
-      colorClass = "text-rose-900 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/40";
-      progressBg = "bg-rose-500";
-      phaseDescription = `Day ${currentDay} of your cycle. Progesterone and estrogen are low. Focus on active recovery.`;
-      workoutRecommendation = "Honor your body: opt for low-intensity sessions like active recovery, walking, light yoga, or slow steady cardio.";
-    } else if (currentDay <= 13) {
-      phaseKey = "follicular";
-      phaseName = "Follicular Phase";
-      icon = "🌱";
-      intensity = "High";
-      colorClass = "text-emerald-900 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40";
-      progressBg = "bg-emerald-500";
-      phaseDescription = `Day ${currentDay} of your cycle. Estrogen levels are rising, driving physical stamina.`;
-      workoutRecommendation = "Stamina is climbing! This is an ideal window for high-intensity cardio, hypertrophy, and heavy resistance training.";
-    } else if (currentDay <= 15) {
-      phaseKey = "ovulatory";
-      phaseName = "Ovulatory Phase";
-      icon = "🔥";
-      intensity = "Peak (PR Focus)";
-      colorClass = "text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40";
-      progressBg = "bg-amber-500";
-      phaseDescription = `Day ${currentDay} of your cycle. Hormones peak, unleashing maximum explosive power.`;
-      workoutRecommendation = "You are at your absolute strongest! Perfect time to test personal records (PRs), run max sprints, or do demanding lifting.";
-    } else {
-      phaseKey = "luteal";
-      phaseName = "Luteal Phase";
-      icon = "🍂";
-      intensity = "Moderate";
-      colorClass = "text-indigo-900 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40";
-      progressBg = "bg-indigo-500";
-      phaseDescription = `Day ${currentDay} of your cycle. Estrogen decreases as progesterone rises, preparing for rest.`;
-      workoutRecommendation = "Focus on endurance, moderate weight volumes, steady state aerobic sessions, and mind-muscle connection.";
-    }
-
-    return {
-      phaseKey,
-      currentDay,
-      phaseName,
-      phaseDescription,
-      icon,
-      workoutRecommendation,
-      intensity,
-      colorClass,
-      progressBg,
-      percentComplete: Math.min(Math.round((currentDay / cycleLength) * 100), 100),
-    };
-  };
-
-  const cycleInfo = userProfile?.gender === "FEMALE" && userProfile?.lastPeriodStart 
-    ? getCycleInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28) 
-    : null;
-
-  // Selected Tab for cycle info (defaults to active phase)
-  const [selectedPhase, setSelectedPhase] = useState<string>("luteal");
-
-  useEffect(() => {
-    if (cycleInfo) {
-      setSelectedPhase(cycleInfo.phaseKey);
-    }
-  }, [cycleInfo]);
 
   const cyclePhasesData: Record<string, {
     name: string;
