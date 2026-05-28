@@ -32,9 +32,12 @@ function ActivityChart({ workouts }: { workouts: Workout[] }) {
 
   const data = days.map((day) => {
     const dayStr = day.toISOString().split("T")[0];
-    const dayWorkouts = workouts.filter(
-      (w) => new Date(w.date).toISOString().split("T")[0] === dayStr
-    );
+     const dayWorkouts = workouts.filter((w) => {
+       if (!w || !w.date) return false;
+       const d = new Date(w.date);
+       if (isNaN(d.getTime())) return false;
+       return d.toISOString().split("T")[0] === dayStr;
+     });
     return {
       date: day,
       label: day.toLocaleDateString("en-US", { weekday: "short" }),
@@ -250,7 +253,12 @@ function ConsistencyHeatmap({ workouts }: { workouts: Workout[] }) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     const dayStr = d.toISOString().split("T")[0];
-    const count = workouts.filter((w) => new Date(w.date).toISOString().split("T")[0] === dayStr).length;
+    const count = workouts.filter((w) => {
+      if (!w || !w.date) return false;
+      const d = new Date(w.date);
+      if (isNaN(d.getTime())) return false;
+      return d.toISOString().split("T")[0] === dayStr;
+    }).length;
     days.push({ date: d, count });
   }
 
@@ -397,13 +405,25 @@ export default function DashboardPage() {
   const lastWeekAgo = new Date(weekAgo);
   lastWeekAgo.setDate(lastWeekAgo.getDate() - 7);
 
-  const thisWeek = workouts.filter((w) => new Date(w.date) >= weekAgo);
-  const lastWeek = workouts.filter((w) => { const d = new Date(w.date); return d >= lastWeekAgo && d < weekAgo; });
+  const thisWeek = workouts.filter((w) => {
+    if (!w || !w.date) return false;
+    const d = new Date(w.date);
+    return !isNaN(d.getTime()) && d >= weekAgo;
+  });
+  const lastWeek = workouts.filter((w) => {
+    if (!w || !w.date) return false;
+    const d = new Date(w.date);
+    return !isNaN(d.getTime()) && d >= lastWeekAgo && d < weekAgo;
+  });
   const totalMinutes = workouts.reduce((sum, w) => sum + (w.duration || 0), 0);
 
   // Streak
   let streak = 0;
-  const sortedDates = [...new Set(workouts.map((w) => new Date(w.date).toISOString().split("T")[0]).sort().reverse())];
+  const sortedDates = [...new Set(workouts.map((w) => {
+    if (!w || !w.date) return "";
+    const d = new Date(w.date);
+    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+  }).filter(Boolean).sort().reverse())];
   if (sortedDates.length > 0) {
     let checkDate = new Date(now.toISOString().split("T")[0]);
     for (const dateStr of sortedDates) {
@@ -414,10 +434,16 @@ export default function DashboardPage() {
 
   // Most active day
   const dayCounts = [0, 0, 0, 0, 0, 0, 0];
-  workouts.forEach((w) => { dayCounts[new Date(w.date).getDay()]++; });
+  workouts.forEach((w) => {
+    if (!w || !w.date) return;
+    const d = new Date(w.date);
+    if (!isNaN(d.getTime())) {
+      dayCounts[d.getDay()]++;
+    }
+  });
   const maxDayIdx = dayCounts.indexOf(Math.max(...dayCounts));
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const mostActiveDay = workouts.length > 0 ? dayNames[maxDayIdx] : "—";
+  const mostActiveDay = workouts.length > 0 && maxDayIdx >= 0 ? dayNames[maxDayIdx] : "—";
 
   // Menstrual cycle tracking helper
   const getCycleInfo = (lastPeriodStartStr: string, cycleLength: number = 28) => {

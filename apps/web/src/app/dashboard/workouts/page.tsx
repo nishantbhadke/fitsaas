@@ -10,7 +10,12 @@ import {
   type Exercise,
   type ExerciseCategory,
 } from "@/data/exercises-data";
-import { ShareModal } from "@/components/ShareModal";
+import dynamic from "next/dynamic";
+const ShareModal = dynamic(
+  () => import("@/components/ShareModal").then((mod) => mod.ShareModal),
+  { ssr: false }
+);
+
 
 interface Workout {
   id: string;
