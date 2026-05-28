@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
@@ -92,6 +92,10 @@ export default function ProgressPage() {
           Authorization: `Bearer ${(session as any).appToken}`,
         },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setWorkouts(data.workouts || []);
@@ -136,9 +140,12 @@ export default function ProgressPage() {
 
   const weeklyData = days.map((day) => {
     const dayStr = day.toISOString().split("T")[0];
-    const count = workouts.filter(
-      (w) => new Date(w.date).toISOString().split("T")[0] === dayStr
-    ).length;
+    const count = workouts.filter((w) => {
+      if (!w || !w.date) return false;
+      const d = new Date(w.date);
+      if (isNaN(d.getTime())) return false;
+      return d.toISOString().split("T")[0] === dayStr;
+    }).length;
     return {
       label: day.toLocaleDateString("en-US", { weekday: "short" }),
       count,
@@ -149,12 +156,16 @@ export default function ProgressPage() {
 
   // Monthly breakdown
   const thisMonth = workouts.filter((w) => {
+    if (!w || !w.date) return false;
     const d = new Date(w.date);
+    if (isNaN(d.getTime())) return false;
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
   const lastMonth = workouts.filter((w) => {
+    if (!w || !w.date) return false;
     const d = new Date(w.date);
+    if (isNaN(d.getTime())) return false;
     const lm = new Date(now.getFullYear(), now.getMonth() - 1);
     return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
   });
@@ -260,10 +271,10 @@ export default function ProgressPage() {
                 <div className="flex items-center gap-4 text-sm text-foreground/60">
                   {workout.duration && <span>{workout.duration} min</span>}
                   <span>
-                    {new Date(workout.date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {!isNaN(new Date(workout.date).getTime())
+                      ? new Date(workout.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "—"
+                    }
                   </span>
                 </div>
               </div>

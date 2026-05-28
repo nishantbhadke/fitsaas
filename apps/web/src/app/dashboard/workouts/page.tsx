@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -289,6 +289,10 @@ export default function WorkoutsPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/workouts`, {
         headers: { Authorization: `Bearer ${(session as any).appToken}` },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setWorkouts(data.workouts || []);
@@ -319,6 +323,10 @@ export default function WorkoutsPage() {
           notes: notes.trim() || null,
         }),
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         setToast(`✅ "${name}" logged!`);
         setTimeout(() => setToast(null), 3000);
@@ -340,6 +348,10 @@ export default function WorkoutsPage() {
           Authorization: `Bearer ${(session as any).appToken}`,
         },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         setToast("🗑 Workout deleted");
         setTimeout(() => setToast(null), 3000);

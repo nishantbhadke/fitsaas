@@ -337,6 +337,10 @@ export default function DashboardPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/workouts`, {
         headers: { Authorization: `Bearer ${(session as any).appToken}` },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setWorkouts(data.workouts || []);
@@ -352,6 +356,10 @@ export default function DashboardPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/me`, {
         headers: { Authorization: `Bearer ${(session as any).appToken}` },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setUserProfile(data.user || null);

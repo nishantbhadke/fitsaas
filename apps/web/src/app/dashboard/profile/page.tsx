@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, Suspense } from "react";
 
@@ -46,6 +46,10 @@ function ProfileContent() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/me`, {
         headers: { Authorization: `Bearer ${(session as any).appToken}` },
       });
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         const u = data.user;
@@ -137,6 +141,11 @@ function ProfileContent() {
           isGlutenFree,
         }),
       });
+
+      if (res.status === 401 || res.status === 403) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
 
       if (res.ok) {
         const data = await res.json();
