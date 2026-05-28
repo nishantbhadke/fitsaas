@@ -67,8 +67,17 @@ function SessionControl() {
   // 3. Backend Auth Token Missing Guard (Failed Sync or server down)
   useEffect(() => {
     if (status === "authenticated" && !session?.appToken) {
-      console.warn("Backend auth token is missing in session. Forcing clean signout.");
-      signOut({ callbackUrl: "/login?error=sync_failed" });
+      // Allow a brief grace period (e.g. 2.5 seconds) for session token synchronization to resolve.
+      // This prevents race conditions on first-time login where status becomes "authenticated"
+      // while the backend database synchronization callback is still in progress.
+      const timer = setTimeout(() => {
+        if (!session?.appToken) {
+          console.warn("Backend auth token is missing in session after grace period. Forcing clean signout.");
+          signOut({ callbackUrl: "/login?error=sync_failed" });
+        }
+      }, 2500);
+
+      return () => clearTimeout(timer);
     }
   }, [session, status]);
 
