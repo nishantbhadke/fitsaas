@@ -7,14 +7,15 @@ function SessionControl() {
   const { data: session, status } = useSession();
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // 1. Redeployment Auto-Logout Detection
+  // 1. Redeployment Auto-Logout Detection (disabled in development to prevent hot-reload signouts)
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && process.env.NODE_ENV !== "development") {
       const currentBuildTime = process.env.NEXT_PUBLIC_BUILD_TIME;
       if (currentBuildTime) {
         const storedBuildTime = localStorage.getItem("fitsaas_last_build_time");
         if (storedBuildTime && storedBuildTime !== currentBuildTime) {
           // New build deployed! Clear storage and force logout
+          console.warn("[SessionControl] New production build detected! Clearing storage and forcing signout.");
           localStorage.removeItem("fitsaas_last_build_time");
           signOut({ callbackUrl: "/login" });
         } else {
