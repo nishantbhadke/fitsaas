@@ -105,6 +105,7 @@ export default function WellnessPage() {
   const [energyLevel, setEnergyLevel] = useState(3);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
 
   // active selected phase detail browsing
   const [selectedPhase, setSelectedPhase] = useState("menstrual");
@@ -221,8 +222,13 @@ export default function WellnessPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/menstrual`, {
-        method: "POST",
+      const url = editingLogId
+        ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/menstrual/${editingLogId}`
+        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/menstrual`;
+      const method = editingLogId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${(session as any).appToken}`,
@@ -243,7 +249,8 @@ export default function WellnessPage() {
       }
 
       if (res.ok) {
-        showToastMessage("✅ Cycle parameters logged successfully!");
+        showToastMessage(editingLogId ? "✅ Cycle parameters updated successfully!" : "✅ Cycle parameters logged successfully!");
+        setEditingLogId(null);
         setEndDate("");
         setSelectedSymptoms([]);
         setSelectedMood("");
@@ -252,7 +259,7 @@ export default function WellnessPage() {
         fetchLogs();
       } else {
         const errData = await res.json();
-        showToastMessage(`❌ Error: ${errData.error || "Failed to log cycle data"}`);
+        showToastMessage(`❌ Error: ${errData.error || "Failed to save cycle data"}`);
       }
     } catch (err) {
       console.error(err);
@@ -321,6 +328,27 @@ export default function WellnessPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleEditSelect = (log: MenstrualLog) => {
+    setEditingLogId(log.id);
+    setStartDate(log.startDate ? new Date(log.startDate).toISOString().split("T")[0] : "");
+    setEndDate(log.endDate ? new Date(log.endDate).toISOString().split("T")[0] : "");
+    setSelectedSymptoms(log.symptoms || []);
+    setSelectedMood(log.mood || "");
+    setEnergyLevel(log.energy || 3);
+    setNotes(log.notes || "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLogId(null);
+    setStartDate(new Date().toISOString().split("T")[0]);
+    setEndDate("");
+    setSelectedSymptoms([]);
+    setSelectedMood("");
+    setEnergyLevel(3);
+    setNotes("");
   };
 
   const handleSymptomToggle = (symptomId: string) => {
@@ -411,8 +439,8 @@ export default function WellnessPage() {
             {/* Cycle boundary input card */}
             <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-5">
               <div>
-                <h2 className="text-lg font-bold">Log Cycle Parameters</h2>
-                <p className="text-xs text-foreground/45 mt-0.5">Log dates, fatigue parameters, and symptom indicators.</p>
+                <h2 className="text-lg font-bold">{editingLogId ? "✏️ Edit Cycle Parameters" : "Log Cycle Parameters"}</h2>
+                <p className="text-xs text-foreground/45 mt-0.5">{editingLogId ? "Modify dates, fatigue parameters, and symptom indicators for this log." : "Log dates, fatigue parameters, and symptom indicators."}</p>
               </div>
 
               <form onSubmit={handleLogSubmit} className="space-y-4">
@@ -519,13 +547,26 @@ export default function WellnessPage() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full h-12 flex items-center justify-center rounded-xl bg-brand-600 text-white text-xs font-black hover:bg-brand-500 transition-colors shadow-md active:scale-[0.98] disabled:opacity-50 mt-2"
-                >
-                  {submitting ? "SUBMITTING..." : "LOG CYCLE STATUS"}
-                </button>
+                 <div className="flex gap-3 mt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`h-12 flex-1 flex items-center justify-center rounded-xl text-white text-xs font-black transition-colors shadow-md active:scale-[0.98] disabled:opacity-50 ${
+                      editingLogId ? "bg-amber-600 hover:bg-amber-500" : "bg-brand-600 hover:bg-brand-500"
+                    }`}
+                  >
+                    {submitting ? "SAVING..." : editingLogId ? "SAVE CHANGES" : "LOG CYCLE STATUS"}
+                  </button>
+                  {editingLogId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="h-12 px-6 rounded-xl border border-border bg-background hover:bg-white/[0.04] text-xs font-bold text-foreground/75 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -596,13 +637,22 @@ export default function WellnessPage() {
                         )}
                       </div>
 
-                      <button
-                        onClick={() => handleDeleteLog(log.id)}
-                        className="text-foreground/30 hover:text-red-500 hover:bg-red-500/10 h-7 w-7 rounded-lg flex items-center justify-center transition-colors text-xs cursor-pointer"
-                        title="Delete log"
-                      >
-                        ✕
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => handleEditSelect(log)}
+                          className="text-foreground/30 hover:text-brand-500 hover:bg-brand-500/10 h-7 w-7 rounded-lg flex items-center justify-center transition-colors text-xs cursor-pointer"
+                          title="Edit log"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="text-foreground/30 hover:text-red-500 hover:bg-red-500/10 h-7 w-7 rounded-lg flex items-center justify-center transition-colors text-xs cursor-pointer"
+                          title="Delete log"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
