@@ -67,15 +67,24 @@ function SessionControl() {
 
   // 3. Backend Auth Token Missing Guard (Failed Sync or server down)
   useEffect(() => {
+    console.log(`[SessionControl Trace] status: "${status}" | session exists: ${!!session} | appToken exists: ${!!session?.appToken}`);
+    if (session) {
+      console.log(`[SessionControl Trace] session detail JSON: ${JSON.stringify({
+        expires: session.expires,
+        hasAppToken: !!(session as any).appToken,
+        user: session.user,
+      }, null, 2)}`);
+    }
+
     if (status === "authenticated" && !session?.appToken) {
       setIsSyncing(true);
-      console.warn(`[SessionControl] Authenticated in NextAuth, but Fastify appToken is missing. Session:`, session);
+      console.warn(`[SessionControl Warn] Authenticated in NextAuth, but Fastify appToken is missing! Session:`, session);
       // Allow a brief grace period (10 seconds) for session token synchronization to resolve.
       // This prevents race conditions on first-time login where status becomes "authenticated"
       // while the backend database synchronization callback is still in progress.
       const timer = setTimeout(() => {
         if (!session?.appToken) {
-          console.warn("Backend auth token is missing in session after grace period. Forcing clean signout.");
+          console.error("[SessionControl Error] appToken remained missing after 10-second grace period! Triggering clean auto-logout.");
           setIsSyncing(false);
           signOut({ callbackUrl: "/login?error=sync_failed" });
         }

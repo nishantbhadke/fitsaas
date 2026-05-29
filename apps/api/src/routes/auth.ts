@@ -109,16 +109,23 @@ export default async function authRoutes(server: FastifyInstance) {
   });
 
   server.post('/google', async (request, reply) => {
-    const { email, name, image } = request.body as any;
+    const requestBody = request.body as any;
+    server.log.info(`[Fastify API /auth/google] 🚀 RECEIVED REQUEST payload:
+${JSON.stringify(requestBody, null, 2)}`);
+
+    const { email, name, image } = requestBody;
 
     if (!email) {
+      server.log.error(`[Fastify API /auth/google] ❌ Missing email in request body!`);
       return reply.status(400).send({ error: 'Email is required for Google login' });
     }
 
     try {
+      server.log.info(`[Fastify API /auth/google] Searching database for user with email: ${email}`);
       let user = await prisma.user.findUnique({ where: { email } });
 
       if (!user) {
+        server.log.info(`[Fastify API /auth/google] User not found. Creating a NEW user account...`);
         const randomPassword = crypto.randomBytes(16).toString('hex');
         user = await prisma.user.create({
           data: {
@@ -128,17 +135,29 @@ export default async function authRoutes(server: FastifyInstance) {
             image: image || null,
           },
         });
-      } else if (image && user.image !== image) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { image },
-        });
+        server.log.info(`[Fastify API /auth/google] ✅ New user created successfully in DB (ID: ${user.id})`);
+      } else {
+        server.log.info(`[Fastify API /auth/google] Existing user found in DB (ID: ${user.id})`);
+        if (image && user.image !== image) {
+          server.log.info(`[Fastify API /auth/google] Updating existing user's avatar image URL to: ${image}`);
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { image },
+          });
+          server.log.info(`[Fastify API /auth/google] ✅ User avatar URL successfully updated`);
+        }
       }
 
+      server.log.info(`[Fastify API /auth/google] Signing Fastify JWT token for user ID: ${user.id}`);
       const token = server.jwt.sign({ id: user.id, email: user.email });
-      return { token, user: serializeUser(user) };
+      
+      const responsePayload = { token, user: serializeUser(user) };
+      server.log.info(`[Fastify API /auth/google] ✅ SENDING SYNC RESPONSE payload:
+${JSON.stringify(responsePayload, null, 2)}`);
+      
+      return responsePayload;
     } catch (error) {
-      server.log.error(error);
+      server.log.error(error, `[Fastify API /auth/google] ❌ Database or Authentication flow exception occurred!`);
       return reply.status(500).send({ error: 'Authentication failed' });
     }
   });
