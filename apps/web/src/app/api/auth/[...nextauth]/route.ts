@@ -45,49 +45,48 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google") {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/google`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: user.email,
-              name: user.name,
-              image: user.image,
-            }),
-          });
-
-          if (!res.ok) {
-            console.error("Failed to sync Google user with backend. Status:", res.status);
-            return "/login?error=sync_failed";
-          }
-
-          const data = await res.json();
-          if (data.token) {
-            // Forward Fastify JWT token and user profile to the jwt callback
-            (user as any).appToken = data.token;
-            (user as any).user = data.user;
-            return true;
-          } else {
-            console.error("Backend sync succeeded but token is missing from response");
-            return "/login?error=sync_failed";
-          }
-        } catch (error) {
-          console.error("Failed to fetch backend sync for Google auth:", error);
-          return "/login?error=sync_failed";
-        }
-      }
       return true;
     },
     async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
         if (account.provider === "google") {
-          // Retrieve synchronized Fastify JWT & user info set in signIn callback
-          token.appToken = (user as any).appToken;
-          token.user = (user as any).user;
+          const startTime = performance.now();
+          console.log(`[Google Sync] 🚀 Initiating backend database synchronization for user: ${user.email} in jwt callback...`);
+          try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/google`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: user.email,
+                name: user.name,
+                image: user.image,
+              }),
+            });
+            const endTime = performance.now();
+            const latency = (endTime - startTime).toFixed(2);
+            console.log(`[Google Sync] ⚡ Backend responded in ${latency}ms with status: ${res.status}`);
+
+            if (!res.ok) {
+              console.error(`[Google Sync] ❌ Failed to sync Google user with backend. Status: ${res.status}`);
+              throw new Error("sync_failed");
+            }
+
+            const data = await res.json();
+            if (data.token) {
+              token.appToken = data.token; // The Fastify JWT
+              token.user = data.user;      // The Fastify User
+              console.log(`[Google Sync] ✅ Successfully populated token.appToken and token.user in NextAuth JWT`);
+            } else {
+              console.error("[Google Sync] ❌ Backend sync succeeded but token is missing from response data");
+              throw new Error("sync_failed");
+            }
+          } catch (error) {
+            console.error("[Google Sync] ❌ Exception during backend user synchronization fetch:", error);
+            throw error;
+          }
         } else if (account.provider === "credentials") {
           token.appToken = (user as any).appToken;
           token.user = (user as any).user;

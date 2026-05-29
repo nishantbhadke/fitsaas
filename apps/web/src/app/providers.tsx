@@ -69,7 +69,8 @@ function SessionControl() {
   useEffect(() => {
     if (status === "authenticated" && !session?.appToken) {
       setIsSyncing(true);
-      // Allow a brief grace period (5 seconds) for session token synchronization to resolve.
+      console.warn(`[SessionControl] Authenticated in NextAuth, but Fastify appToken is missing. Session:`, session);
+      // Allow a brief grace period (10 seconds) for session token synchronization to resolve.
       // This prevents race conditions on first-time login where status becomes "authenticated"
       // while the backend database synchronization callback is still in progress.
       const timer = setTimeout(() => {
@@ -78,7 +79,7 @@ function SessionControl() {
           setIsSyncing(false);
           signOut({ callbackUrl: "/login?error=sync_failed" });
         }
-      }, 5000);
+      }, 10000);
 
       return () => {
         clearTimeout(timer);

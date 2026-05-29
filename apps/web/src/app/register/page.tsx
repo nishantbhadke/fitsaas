@@ -27,10 +27,32 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 1. Basic empty validations
     if (!name || !email || !password) {
       setError("Please fill in all fields.");
       return;
     }
+
+    // 2. Strict blank space checks
+    if (name.trim().length === 0) {
+      setError("Display Name cannot be blank.");
+      return;
+    }
+
+    // 3. Email format regex check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // 4. Password strength validation (min 8 chars)
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
 
