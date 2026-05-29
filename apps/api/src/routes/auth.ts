@@ -27,7 +27,25 @@ export default async function authRoutes(server: FastifyInstance) {
     dietType: user.dietType,
     isLactoseIntolerant: user.isLactoseIntolerant,
     isGlutenFree: user.isGlutenFree,
+    menstrualTrackingEnabled: user.menstrualTrackingEnabled,
   });
+
+  const hashPassword = (password: string): string => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+  };
+
+  const verifyPassword = (password: string, storedHash: string): boolean => {
+    if (!storedHash.includes(':')) {
+      // Legacy plaintext password check
+      return storedHash === password;
+    }
+    const [salt, originalHash] = storedHash.split(':');
+    if (!salt || !originalHash) return false;
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return hash === originalHash;
+  };
 
   server.post('/register', async (request, reply) => {
     const { email, password, name } = request.body as any;
@@ -37,10 +55,16 @@ export default async function authRoutes(server: FastifyInstance) {
     }
 
     try {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        return reply.status(400).send({ error: 'A user with this email already exists.' });
+      }
+
+      const hashedPassword = hashPassword(password);
       const user = await prisma.user.create({
         data: {
           email,
-          password, 
+          password: hashedPassword, 
           name,
         },
       });
@@ -56,10 +80,28 @@ export default async function authRoutes(server: FastifyInstance) {
   server.post('/login', async (request, reply) => {
     const { email, password } = request.body as any;
 
+    if (!email || !password) {
+      return reply.status(400).send({ error: 'Email and password are required' });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || user.password !== password) {
+    if (!user || !verifyPassword(password, user.password)) {
       return reply.status(401).send({ error: 'Invalid credentials' });
+    }
+
+    // Auto-upgrade legacy plaintext password to PBKDF2 hash on successful login
+    if (!user.password.includes(':')) {
+      try {
+        const upgradedHash = hashPassword(password);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: upgradedHash },
+        });
+        server.log.info(`Successfully upgraded legacy plaintext password for user: ${email}`);
+      } catch (err) {
+        server.log.error(err as any, `Failed to upgrade password for legacy user ${email}`);
+      }
     }
 
     const token = server.jwt.sign({ id: user.id, email: user.email });

@@ -723,7 +723,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <div className="bg-card border border-border p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
           <h3 className="text-xs font-medium text-foreground/50">This Week</h3>
           <p className="text-3xl font-bold mt-1 text-brand-600">{loading ? "—" : thisWeek.length}</p>
