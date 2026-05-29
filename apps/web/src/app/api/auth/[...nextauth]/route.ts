@@ -15,9 +15,17 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        console.log(`[NextAuth API: authorize] 🚀 STARTING AUTHORIZE LIFECYCLE for email: ${credentials?.email}`);
+        if (!credentials?.email || !credentials?.password) {
+          console.warn(`[NextAuth API: authorize] ⚠️ Credentials validation failed: Missing email or password.`);
+          return null;
+        }
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/login`, {
+          const targetUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/login`;
+          console.log(`[NextAuth API: authorize] 🔍 Fetching backend credentials login from: ${targetUrl}`);
+          
+          const startTime = performance.now();
+          const res = await fetch(targetUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -25,8 +33,20 @@ const handler = NextAuth({
               password: credentials.password,
             }),
           });
+          const endTime = performance.now();
+          const latency = (endTime - startTime).toFixed(2);
+          
+          console.log(`[NextAuth API: authorize] ⚡ Backend responded in ${latency}ms with status: ${res.status}`);
+          
+          if (!res.ok) {
+            const errText = await res.text().catch(() => "N/A");
+            console.error(`[NextAuth API: authorize] ❌ Backend rejected credentials. Status: ${res.status}, Error: ${errText}`);
+            return null;
+          }
+
           const data = await res.json();
-          if (res.ok && data.token && data.user) {
+          if (data.token && data.user) {
+            console.log(`[NextAuth API: authorize] ✅ Credentials accepted. Returning authorized user object: id=${data.user.id}, email=${data.user.email}`);
             return {
               id: data.user.id,
               email: data.user.email,
@@ -34,10 +54,12 @@ const handler = NextAuth({
               appToken: data.token,
               user: data.user,
             };
+          } else {
+            console.error(`[NextAuth API: authorize] ❌ Backend accepted login but response is missing token or user payload!`, data);
+            return null;
           }
-          return null;
         } catch (error) {
-          console.error("Credentials authorize error:", error);
+          console.error("[NextAuth API: authorize] ❌ CRITICAL EXCEPTION during credentials authorize fetch:", error);
           return null;
         }
       }
@@ -45,11 +67,15 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log(`[NextAuth API: signIn callback] 🛡️ Triggered. Provider: ${account?.provider}, User: ${user?.email}`);
       return true;
     },
     async jwt({ token, user, account }) {
+      console.log(`[NextAuth API: jwt callback] 🔄 Triggered. Account provider: ${account?.provider || "none (subsequent call)"}`);
+      
       // Initial sign in
       if (account && user) {
+        console.log(`[NextAuth API: jwt callback] 🆕 Initial sign-in detected. Provider: ${account.provider}`);
         if (account.provider === "google") {
           const startTime = performance.now();
           const requestBody = {
@@ -101,16 +127,23 @@ ${JSON.stringify(data, null, 2)}`);
             throw error;
           }
         } else if (account.provider === "credentials") {
+          console.log(`[NextAuth API: jwt callback] 🔑 Credentials provider detected. Attaching token.appToken and token.user.`);
           token.appToken = (user as any).appToken;
           token.user = (user as any).user;
         }
+      } else {
+        console.log(`[NextAuth API: jwt callback] 🔄 Subsequent session check. token.appToken is: ${token.appToken ? "PRESENT" : "ABSENT"}`);
       }
       return token;
     },
     async session({ session, token }: any) {
+      console.log(`[NextAuth API: session callback] 🛡️ Triggered. Session check from client. token.appToken: ${token.appToken ? "PRESENT" : "ABSENT"}`);
       if (token.appToken) {
         session.appToken = token.appToken;
         session.user = token.user;
+        console.log(`[NextAuth API: session callback] ✅ successfully attached appToken and user payload to session.`);
+      } else {
+        console.warn(`[NextAuth API: session callback] ⚠️ Warning: token.appToken was missing in session callback!`);
       }
       return session;
     },

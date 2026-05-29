@@ -28,7 +28,13 @@ function LoginContent() {
 
   useEffect(() => {
     const err = searchParams?.get("error");
+    const callback = searchParams?.get("callbackUrl");
+    console.log(`[Login Page] 🛡️ Component mounted. URL Query Parameters:
+- error: ${err || "none"}
+- callbackUrl: ${callback || "none"}`);
+
     if (err) {
+      console.warn(`[Login Page] ⚠️ Detected error parameter from NextAuth: ${err}`);
       if (err === "sync_failed") {
         setError("Backend synchronization failed. Please verify that the API server is online.");
       } else if (err === "SessionRequired" || err === "CredentialsSignin") {
@@ -41,21 +47,27 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(`[Login Page] ⚡ Form submitted. Initiating credentials validation...`);
+    
     if (!email || !password) {
+      console.warn(`[Login Page] ⚠️ Validation failed: Email or password field is blank.`);
       setError("Please enter both email and password.");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.warn(`[Login Page] ⚠️ Validation failed: Invalid email format entered (${email}).`);
       setError("Please enter a valid email address.");
       return;
     }
 
+    console.log(`[Login Page] 🔍 Inputs valid. Requesting NextAuth credentials sign-in for: ${email}`);
     setError(null);
     setSubmitting(true);
 
     try {
+      console.log(`[Login Page] 🚀 Sending credentials payload to NextAuth...`);
       const res = await signIn("credentials", {
         redirect: false,
         email,
@@ -63,15 +75,26 @@ function LoginContent() {
         callbackUrl,
       });
 
+      console.log(`[Login Page] 📥 NextAuth signIn resolved. Response payload:`, {
+        ok: res?.ok,
+        status: res?.status,
+        error: res?.error,
+        url: res?.url
+      });
+
       if (res?.error) {
+        console.error(`[Login Page] ❌ NextAuth returned error: ${res.error}`);
         setError("Invalid email or password.");
       } else {
+        console.log(`[Login Page] ✅ Authentication successful. Setting redirect destination: ${callbackUrl}`);
+        console.log(`[Login Page] 🔄 Executing window.location.href redirect...`);
         window.location.href = callbackUrl;
       }
     } catch (err) {
-      console.error(err);
+      console.error(`[Login Page] ❌ UNEXPECTED CRITICAL ERROR during signIn:`, err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
+      console.log(`[Login Page] 🏁 Form submission lifecycle finished.`);
       setSubmitting(false);
     }
   };
