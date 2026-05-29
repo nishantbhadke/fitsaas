@@ -568,6 +568,10 @@ function ProfileContent() {
   const [dietGoal, setDietGoal] = useState("loss");
   const [copied, setCopied] = useState(false);
 
+  // Unified Diet Planner States
+  const [customDietNotes, setCustomDietNotes] = useState("");
+  const [activeDietTab, setActiveDietTab] = useState<"clinical" | "indian" | "custom" | string>("indian");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -634,18 +638,38 @@ function ProfileContent() {
         const savedHasMedical = localStorage.getItem(`has_medical_${email}`);
         const savedDisease = localStorage.getItem(`diet_disease_${email}`);
         const savedGoal = localStorage.getItem(`diet_goal_${email}`);
+        const savedCustomNotes = localStorage.getItem(`custom_diet_notes_${email}`);
 
         if (savedHasMedical) setHasMedicalHistory(savedHasMedical === "true");
         if (savedDisease) setMedicalCondition(savedDisease);
         if (savedGoal) setDietGoal(savedGoal);
+        if (savedCustomNotes) setCustomDietNotes(savedCustomNotes);
       }
     }
   }, [status, fetchProfile, session]);
+
+  // Set tab on initial load or toggle
+  useEffect(() => {
+    if (hasMedicalHistory) {
+      setActiveDietTab("clinical");
+    } else if (dietPlanEnabled) {
+      setActiveDietTab("indian");
+    } else {
+      setActiveDietTab("custom");
+    }
+  }, [hasMedicalHistory, dietPlanEnabled]);
 
   const handleHasMedicalChange = (checked: boolean) => {
     setHasMedicalHistory(checked);
     if (session?.user?.email) {
       localStorage.setItem(`has_medical_${session.user.email}`, checked ? "true" : "false");
+    }
+  };
+
+  const handleCustomDietNotesChange = (val: string) => {
+    setCustomDietNotes(val);
+    if (session?.user?.email) {
+      localStorage.setItem(`custom_diet_notes_${session.user.email}`, val);
     }
   };
 
@@ -1246,190 +1270,308 @@ function ProfileContent() {
           </div>
         )}
 
-        {/* Dynamic Medical Nutrition Plan */}
-        {hasMedicalHistory && (
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex items-start gap-4 border-b border-border pb-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex shrink-0 items-center justify-center text-3xl shadow-sm">
-                {activeDiet.icon}
-              </div>
-              <div className="flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-brand-500">Therapeutic Medical Target</span>
-                <h2 className="text-xl font-bold text-foreground mt-0.5">{activeDiet.name}</h2>
-                <p className="text-xs text-foreground/60 mt-1.5 leading-relaxed">{activeDiet.description}</p>
-              </div>
-            </div>
-
-            {/* Daily Schedule Card */}
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center">
+        {/* Unified Personalized Diet & Nutrition Planner Section */}
+        {(dietPlanEnabled || hasMedicalHistory) && (
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-300">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🍛</span>
                 <div>
-                  <h3 className="text-sm font-bold">Daily Nutrition Schedule</h3>
-                  <p className="text-[11px] text-foreground/45">Tailored meals for your target condition and calorie budget.</p>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-brand-500">Unified Nutrition Dashboard</span>
+                  <h2 className="text-xl font-bold text-foreground">Your Personalized Diet & Nutrition Plan</h2>
                 </div>
-                
-                {/* Micro selectors: Goal & Copy Plan */}
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                  <div className="flex rounded-lg overflow-hidden border border-border p-0.5 bg-background">
-                    {[
-                      { id: "loss", label: "Loss 📉" },
-                      { id: "gain", label: "Gain 📈" }
-                    ].map((g) => (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => handleDietGoalChange(g.id)}
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded transition-colors ${
-                          dietGoal === g.id
-                            ? "bg-brand-500 text-white"
-                            : "text-foreground/60 hover:text-foreground"
-                        }`}
-                      >
-                        {g.label}
-                      </button>
-                    ))}
-                  </div>
+              </div>
+              
+              {/* Tab Switchers */}
+              <div className="flex bg-background/50 border border-border rounded-xl p-0.5 self-start sm:self-center">
+                {hasMedicalHistory && (
                   <button
                     type="button"
-                    onClick={handleCopyPlan}
-                    className="h-7 px-3 rounded-lg bg-foreground text-background text-[10px] font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                    onClick={() => setActiveDietTab("clinical")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeDietTab === "clinical"
+                        ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                        : "text-foreground/60 hover:text-foreground"
+                    }`}
                   >
-                    {copied ? "✅ COPIED!" : "📋 COPY PLAN"}
+                    <span>🩺</span> Clinical Diet
                   </button>
+                )}
+                {dietPlanEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveDietTab("indian")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeDietTab === "indian"
+                        ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                        : "text-foreground/60 hover:text-foreground"
+                    }`}
+                  >
+                    <span>🥗</span> Indian Protein Diet
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setActiveDietTab("custom")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeDietTab === "custom"
+                      ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                      : "text-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  <span>📝</span> Custom Diet
+                </button>
+              </div>
+            </div>
+
+            {/* TAB 1: Clinical Diet Plan */}
+            {activeDietTab === "clinical" && hasMedicalHistory && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex shrink-0 items-center justify-center text-3xl shadow-sm text-emerald-500">
+                    {activeDiet.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <span>Therapeutic Target:</span> {activeDiet.name}
+                    </h3>
+                    <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{activeDiet.description}</p>
+                  </div>
+                </div>
+
+                {/* Daily Schedule Card */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center">
+                    <div>
+                      <h3 className="text-sm font-bold">Daily Clinical Timetable</h3>
+                      <p className="text-[11px] text-foreground/45">Custom calibrated for your target condition and calorie budget.</p>
+                    </div>
+                    
+                    {/* Micro selectors: Goal & Copy Plan */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                      <div className="flex rounded-lg overflow-hidden border border-border p-0.5 bg-background">
+                        {[
+                          { id: "loss", label: "Loss 📉" },
+                          { id: "gain", label: "Gain 📈" }
+                        ].map((g) => (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => handleDietGoalChange(g.id)}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded transition-colors ${
+                              dietGoal === g.id
+                                ? "bg-brand-500 text-white"
+                                : "text-foreground/60 hover:text-foreground"
+                            }`}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyPlan}
+                        className="h-7 px-3 rounded-lg bg-foreground text-background text-[10px] font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                      >
+                        {copied ? "✅ COPIED!" : "📋 COPY PLAN"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {medicalMeals.map((meal, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center p-3.5 rounded-xl border border-border bg-background/30 hover:border-brand-500/20 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-semibold text-foreground/40 shrink-0 bg-foreground/5 h-7 px-2 rounded-lg flex items-center justify-center">
+                            {meal.time}
+                          </span>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">{meal.title}</h4>
+                            <p className="text-xs text-foreground/75 leading-relaxed mt-0.5">
+                              {meal.items.join(" + ")}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-500 border border-brand-500/20 px-2 py-0.5 rounded-md">
+                          {meal.portion}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Avoid & Include Foods Split Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Foods to strictly avoid */}
+                  <div className="border border-red-500/20 bg-red-500/5 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-red-500 flex items-center gap-1.5">
+                      ❌ Foods to Strictly Avoid
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      {activeDiet.avoid.map((item, index) => (
+                        <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-500/60 leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Superfoods to actively include */}
+                  <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+                      🌿 Nutritional Superfoods
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      {activeDiet.superfoods.map((item, index) => (
+                        <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500/60 leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Condition Specific Guidelines Card */}
+                <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-background/25">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/75">Key Lifestyle & Diet Guidelines</h3>
+                  <ul className="flex flex-col gap-2.5">
+                    {activeDiet.guidelines.map((guide, index) => (
+                      <li key={index} className="flex gap-2 items-start text-xs text-foreground/80 leading-relaxed">
+                        <span className="w-4.5 h-4.5 shrink-0 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded-full flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        <p>{guide}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
+            )}
 
-              <div className="flex flex-col gap-3">
-                {medicalMeals.map((meal, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center p-3.5 rounded-xl border border-border bg-background/30 hover:border-brand-500/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-semibold text-foreground/40 shrink-0 bg-foreground/5 h-7 px-2 rounded-lg flex items-center justify-center">
-                        {meal.time}
-                      </span>
+            {/* TAB 2: Indian High-Protein Diet Plan */}
+            {activeDietTab === "indian" && dietPlanEnabled && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-emerald-500">Dietary Preferences & Sensitivity Filters</h4>
+                    <p className="text-[10px] text-foreground/60 leading-relaxed">Customize your split plan for dynamic lactose or gluten requirements.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        id="lactoseToggle"
+                        checked={isLactoseIntolerant}
+                        onChange={(e) => setIsLactoseIntolerant(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded text-emerald-500 focus:ring-brand-500 bg-background"
+                      />
+                      <label htmlFor="lactoseToggle" className="text-[10px] font-black uppercase tracking-wider text-foreground/60 cursor-pointer">
+                        Lactose-Free 🥛
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        id="glutenToggle"
+                        checked={isGlutenFree}
+                        onChange={(e) => setIsGlutenFree(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded text-emerald-500 focus:ring-brand-500 bg-background"
+                      />
+                      <label htmlFor="glutenToggle" className="text-[10px] font-black uppercase tracking-wider text-foreground/60 cursor-pointer">
+                        Gluten-Free 🌾
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-foreground/60 leading-relaxed">
+                  Based on your custom daily calorie budget of <strong className="text-foreground">{dailyCalorieGoal} kcal</strong>, 
+                  here is your tailored High-Protein Indian Meal Plan recommendations:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                  {dietPlan.map((d, i) => (
+                    <div key={i} className="bg-background border border-border rounded-xl p-4 flex flex-col justify-between gap-2 hover:border-brand-500/20 transition-all">
                       <div>
-                        <h4 className="font-bold text-xs text-foreground">{meal.title}</h4>
-                        <p className="text-xs text-foreground/75 leading-relaxed mt-0.5">
-                          {meal.items.join(" + ")}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-emerald-500 uppercase tracking-wider">{d.name}</span>
+                          {d.kcal && (
+                            <span className="text-[10px] font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full">
+                              {d.kcal} kcal
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs mt-2 leading-relaxed text-foreground/80">{d.desc}</p>
                       </div>
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-500 border border-brand-500/20 px-2 py-0.5 rounded-md">
-                      {meal.portion}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Avoid & Include Foods Split Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Foods to strictly avoid */}
-              <div className="border border-red-500/20 bg-red-500/5 rounded-xl p-4 flex flex-col gap-3">
-                <h3 className="text-xs font-bold text-red-500 flex items-center gap-1.5">
-                  ❌ Foods to Strictly Avoid
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {activeDiet.avoid.map((item, index) => (
-                    <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-500/60 leading-relaxed">
-                      {item}
-                    </li>
                   ))}
-                </ul>
-              </div>
-
-              {/* Superfoods to actively include */}
-              <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-4 flex flex-col gap-3">
-                <h3 className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
-                  🌿 Nutritional Superfoods
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {activeDiet.superfoods.map((item, index) => (
-                    <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500/60 leading-relaxed">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Condition Specific Guidelines Card */}
-            <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-background/25">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/75">Key Lifestyle & Diet Guidelines</h3>
-              <ul className="flex flex-col gap-2.5">
-                {activeDiet.guidelines.map((guide, index) => (
-                  <li key={index} className="flex gap-2 items-start text-xs text-foreground/80 leading-relaxed">
-                    <span className="w-4.5 h-4.5 shrink-0 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded-full flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                    <p>{guide}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Dynamic Indian Protein Diet Selection */}
-        {dietPlanEnabled && (
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🍛</span>
-                <h3 className="text-base font-bold text-emerald-500 uppercase tracking-wider">Indian High-Protein Diet Plan</h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    id="lactoseToggle"
-                    checked={isLactoseIntolerant}
-                    onChange={(e) => setIsLactoseIntolerant(e.target.checked)}
-                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
-                  />
-                  <label htmlFor="lactoseToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
-                    Lactose-Free
-                  </label>
-                </div>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    id="glutenToggle"
-                    checked={isGlutenFree}
-                    onChange={(e) => setIsGlutenFree(e.target.checked)}
-                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
-                  />
-                  <label htmlFor="glutenToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
-                    Gluten-Free
-                  </label>
                 </div>
               </div>
-            </div>
+            )}
 
-            <p className="text-xs text-foreground/60 leading-relaxed">
-              Based on your custom daily calorie budget of <strong className="text-foreground">{dailyCalorieGoal} kcal</strong>, 
-              here is your tailored High-Protein Indian Meal Plan recommendations:
-            </p>
+            {/* TAB 3: My Custom Diet Plan */}
+            {activeDietTab === "custom" && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-foreground">📝 Custom Meal Planner</h3>
+                  <p className="text-xs text-foreground/60 leading-relaxed">
+                    Have absolute freedom to create your custom daily meal routine, supplement schedule, or combine suggested recipes. Quick-tap emojis to insert them easily!
+                  </p>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-              {dietPlan.map((d, i) => (
-                <div key={i} className="bg-background border border-border rounded-xl p-4 flex flex-col justify-between gap-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-emerald-500 uppercase tracking-wider">{d.name}</span>
-                      {d.kcal && (
-                        <span className="text-[10px] font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full">
-                          {d.kcal} kcal
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs mt-2 leading-relaxed text-foreground/80">{d.desc}</p>
+                {/* Emojis list */}
+                <div className="flex flex-wrap gap-1.5 border border-border rounded-xl p-3 bg-background/30">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-foreground/50 self-center mr-2">Quick Emojis:</span>
+                  {[
+                    { char: "🍳", label: "Eggs" },
+                    { char: "🥗", label: "Salad" },
+                    { char: "🥑", label: "Fats" },
+                    { char: "🍗", label: "Chicken" },
+                    { char: "🐟", label: "Fish" },
+                    { char: "🥛", label: "Whey" },
+                    { char: "🍵", label: "Green Tea" },
+                    { char: "🌾", label: "Carbs" },
+                    { char: "🍎", label: "Apple" },
+                    { char: "🍌", label: "Banana" },
+                    { char: "🥜", label: "Nuts" },
+                    { char: "💧", label: "Water" },
+                    { char: "💪", label: "Fitness" },
+                    { char: "🩺", label: "Clinical" },
+                    { char: "💊", label: "Vitamins" }
+                  ].map((emoji) => (
+                    <button
+                      key={emoji.char}
+                      type="button"
+                      onClick={() => {
+                        handleCustomDietNotesChange(customDietNotes + " " + emoji.char);
+                      }}
+                      className="h-8 px-2.5 rounded-lg bg-background hover:bg-foreground/5 border border-border text-xs flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                      title={emoji.label}
+                    >
+                      <span className="text-sm">{emoji.char}</span>
+                      <span className="text-[9px] font-semibold opacity-60 uppercase">{emoji.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={customDietNotes}
+                    onChange={(e) => handleCustomDietNotesChange(e.target.value)}
+                    placeholder={`e.g. 🍳 Breakfast: 4 Egg Whites scrambled + 1 whole wheat toast\n🥛 10:00 AM: 1 scoop of Whey protein + soaked walnuts\n🥗 Lunch: Soya chunks curry (100g) + 1 brown rice bowl\n🍵 5:00 PM: Green tea with high-fiber digestive biscuits\n💪 Dinner: Grilled paneer steaks with sautéed broccoli...`}
+                    rows={8}
+                    className="w-full bg-background/30 border border-border rounded-xl p-4 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all text-foreground placeholder:text-foreground/30 font-medium leading-relaxed"
+                  />
+                  <div className="absolute bottom-3 right-3 text-[10px] font-semibold text-emerald-500 flex items-center gap-1 opacity-70">
+                    <span>✨</span> Auto-saved to local storage
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
