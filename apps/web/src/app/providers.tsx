@@ -1,19 +1,21 @@
 "use client";
 
 import { SessionProvider, useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function SessionControl() {
   const { data: session, status } = useSession();
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // 1. Redeployment Auto-Logout Detection
+  // 1. Redeployment Auto-Logout Detection (disabled in development to prevent hot-reload signouts)
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && process.env.NODE_ENV !== "development") {
       const currentBuildTime = process.env.NEXT_PUBLIC_BUILD_TIME;
       if (currentBuildTime) {
         const storedBuildTime = localStorage.getItem("fitsaas_last_build_time");
         if (storedBuildTime && storedBuildTime !== currentBuildTime) {
           // New build deployed! Clear storage and force logout
+          console.warn("[SessionControl] New production build detected! Clearing storage and forcing signout.");
           localStorage.removeItem("fitsaas_last_build_time");
           signOut({ callbackUrl: "/login" });
         } else {
@@ -66,11 +68,57 @@ function SessionControl() {
 
   // 3. Backend Auth Token Missing Guard (Failed Sync or server down)
   useEffect(() => {
+    console.log(`[SessionControl Trace] status: "${status}" | session exists: ${!!session} | appToken exists: ${!!session?.appToken}`);
+    if (session) {
+      console.log(`[SessionControl Trace] session detail JSON: ${JSON.stringify({
+        expires: session.expires,
+        hasAppToken: !!(session as any).appToken,
+        user: session.user,
+      }, null, 2)}`);
+    }
+
     if (status === "authenticated" && !session?.appToken) {
-      console.warn("Backend auth token is missing in session. Forcing clean signout.");
-      signOut({ callbackUrl: "/login?error=sync_failed" });
+      setIsSyncing(true);
+      console.warn(`[SessionControl Warn] Authenticated in NextAuth, but Fastify appToken is missing! Session:`, session);
+      // Allow a brief grace period (10 seconds) for session token synchronization to resolve.
+      // This prevents race conditions on first-time login where status becomes "authenticated"
+      // while the backend database synchronization callback is still in progress.
+      const timer = setTimeout(() => {
+        if (!session?.appToken) {
+          console.error("[SessionControl Error] appToken remained missing after 10-second grace period! Triggering clean auto-logout.");
+          setIsSyncing(false);
+          signOut({ callbackUrl: "/login?error=sync_failed" });
+        }
+      }, 10000);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      setIsSyncing(false);
     }
   }, [session, status]);
+
+  if (isSyncing) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#09090b]/80 backdrop-blur-md text-white select-none">
+        <div className="flex flex-col items-center gap-6 max-w-sm px-6 text-center">
+          {/* Animated Spinner with Pulsing Core */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full border-4 border-emerald-500/10 border-t-emerald-400 animate-spin duration-700" />
+            <div className="absolute w-6 h-6 rounded-full bg-emerald-500/15 blur-sm animate-pulse" />
+          </div>
+          
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold tracking-tight text-white">Synchronizing Command Center</h3>
+            <p className="text-[11px] text-white/50 leading-relaxed">
+              Establishing a secure connection and loading your fitness analytics. Please hold on a moment...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return null;
 }

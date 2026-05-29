@@ -8,6 +8,7 @@ const navItems = [
   { href: "/dashboard", label: "Overview", icon: "O" },
   { href: "/dashboard/workouts", label: "Workouts", icon: "W" },
   { href: "/dashboard/progress", label: "Progress", icon: "P" },
+  { href: "/dashboard/wellness", label: "Wellness", icon: "H" },
   { href: "/dashboard/profile", label: "Profile", icon: "U" },
 ];
 
@@ -94,17 +95,19 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 md:pl-20 relative min-h-screen flex flex-col">
-        {/* Persistent Static Upper Right Logout Button */}
-        <div className="absolute top-6 right-6 md:top-10 md:right-10 z-30">
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="px-4 py-2 text-xs md:text-sm font-semibold border border-border bg-card text-foreground rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
-          >
-            Logout
-          </button>
+      <div className="flex-1 md:pl-20 min-h-screen flex flex-col bg-background">
+        <div className="max-w-7xl mx-auto w-full p-6 md:p-10 relative flex flex-col flex-1">
+          {/* Persistent Static Upper Right Logout Button inside layout container */}
+          <div className="absolute top-6 right-6 md:top-10 md:right-10 z-30">
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="px-4 py-2 text-xs md:text-sm font-semibold border border-border bg-card text-foreground rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shadow-sm hover:shadow-md"
+            >
+              Logout
+            </button>
+          </div>
+          <main className="flex-1 w-full">{children}</main>
         </div>
-        <main className="flex-1 p-6 md:p-10 max-w-6xl w-full">{children}</main>
       </div>
     </div>
   );

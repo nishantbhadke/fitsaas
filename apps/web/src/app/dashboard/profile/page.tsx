@@ -99,7 +99,7 @@ function ProfileContent() {
     e.preventDefault();
     if (!session?.appToken) return;
     
-    // Strict validations on positive bounds
+    // Strict validations on fields and dates
     const parsedWeight = weight ? parseFloat(weight) : null;
     const parsedHeight = height ? parseFloat(height) : null;
     const parsedTargetWeight = targetWeight ? parseFloat(targetWeight) : null;
@@ -107,12 +107,61 @@ function ProfileContent() {
     const parsedWater = dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null;
     const parsedCycle = cycleLength ? parseInt(cycleLength.toString()) : null;
 
-    if (parsedWeight !== null && parsedWeight < 0) return alert("Weight cannot be negative.");
-    if (parsedHeight !== null && parsedHeight < 0) return alert("Height cannot be negative.");
-    if (parsedTargetWeight !== null && parsedTargetWeight < 0) return alert("Target weight cannot be negative.");
-    if (parsedCalorie !== null && parsedCalorie < 0) return alert("Daily calorie goal cannot be negative.");
-    if (parsedWater !== null && parsedWater < 0) return alert("Daily water goal cannot be negative.");
-    if (parsedCycle !== null && parsedCycle < 0) return alert("Cycle length cannot be negative.");
+    // Field presence and name checks
+    if (!name || name.trim().length === 0) {
+      return alert("❌ Display name is required and cannot be blank.");
+    }
+
+    // Comprehensive birthDate (DOB) validations (no future date)
+    if (!birthDate) {
+      return alert("❌ Birth date (DOB) is required.");
+    }
+    const parsedBirth = new Date(birthDate);
+    if (isNaN(parsedBirth.getTime())) {
+      return alert("❌ Please enter a valid birth date.");
+    }
+    if (parsedBirth > new Date()) {
+      return alert("❌ Birth date cannot be in the future.");
+    }
+    if (parsedBirth < new Date("1900-01-01")) {
+      return alert("❌ Birth date must be after January 1st, 1900.");
+    }
+
+    // Gender specific period date validation
+    if (gender === "FEMALE" && lastPeriodStart) {
+      const parsedPeriod = new Date(lastPeriodStart);
+      if (isNaN(parsedPeriod.getTime())) {
+        return alert("❌ Please enter a valid last period start date.");
+      }
+      if (parsedPeriod > new Date()) {
+        return alert("❌ Last period start date cannot be in the future.");
+      }
+      const diffTime = Math.abs(new Date().getTime() - parsedPeriod.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 365) {
+        return alert("❌ Last period start date cannot be more than 1 year ago.");
+      }
+    }
+
+    // Strict numerical bounds validation
+    if (parsedWeight !== null && (isNaN(parsedWeight) || parsedWeight < 20 || parsedWeight > 500)) {
+      return alert("❌ Please enter a valid weight between 20 kg and 500 kg.");
+    }
+    if (parsedHeight !== null && (isNaN(parsedHeight) || parsedHeight < 50 || parsedHeight > 300)) {
+      return alert("❌ Please enter a valid height between 50 cm and 300 cm.");
+    }
+    if (parsedTargetWeight !== null && (isNaN(parsedTargetWeight) || parsedTargetWeight < 20 || parsedTargetWeight > 500)) {
+      return alert("❌ Please enter a valid target weight between 20 kg and 500 kg.");
+    }
+    if (parsedCalorie !== null && (isNaN(parsedCalorie) || parsedCalorie < 500 || parsedCalorie > 10000)) {
+      return alert("❌ Please enter a valid daily calorie goal between 500 kcal and 10,000 kcal.");
+    }
+    if (parsedWater !== null && (isNaN(parsedWater) || parsedWater < 500 || parsedWater > 10000)) {
+      return alert("❌ Please enter a valid daily water goal between 500 ml and 10,000 ml.");
+    }
+    if (gender === "FEMALE" && parsedCycle !== null && (isNaN(parsedCycle) || parsedCycle < 10 || parsedCycle > 100)) {
+      return alert("❌ Please enter a valid cycle length between 10 and 100 days.");
+    }
 
     setSaving(true);
 

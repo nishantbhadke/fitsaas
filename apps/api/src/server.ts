@@ -36,6 +36,7 @@ server.decorate('authenticate', async function (request: any, reply: any) {
 
 import authRoutes from './routes/auth';
 import workoutRoutes from './routes/workouts';
+import menstrualRoutes from './routes/menstrual';
 
 // Basic Route
 server.get('/', async (request, reply) => {
@@ -51,6 +52,7 @@ server.get('/db-test', async (request, reply) => {
 // Register custom routes
 server.register(authRoutes, { prefix: '/auth' });
 server.register(workoutRoutes, { prefix: '/workouts' });
+server.register(menstrualRoutes, { prefix: '/menstrual' });
 
 // Start server
 const start = async () => {
