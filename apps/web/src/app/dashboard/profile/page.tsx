@@ -546,15 +546,15 @@ function ProfileContent() {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const [gender, setGender] = useState("");
-  const [cycleLength, setCycleLength] = useState(28);
+  const [cycleLength, setCycleLength] = useState<number | string>(28);
   const [lastPeriodStart, setLastPeriodStart] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [activityLevel, setActivityLevel] = useState("MODERATELY_ACTIVE");
-  const [dailyWaterGoal, setDailyWaterGoal] = useState(2000);
-  const [dailyCalorieGoal, setDailyCalorieGoal] = useState(2000);
+  const [dailyWaterGoal, setDailyWaterGoal] = useState<number | string>(2000);
+  const [dailyCalorieGoal, setDailyCalorieGoal] = useState<number | string>(2000);
 
   // Diet customizer state
   const [dietPlanEnabled, setDietPlanEnabled] = useState(false);
@@ -671,9 +671,9 @@ function ProfileContent() {
     const parsedWeight = weight ? parseFloat(weight) : null;
     const parsedHeight = height ? parseFloat(height) : null;
     const parsedTargetWeight = targetWeight ? parseFloat(targetWeight) : null;
-    const parsedCalorie = dailyCalorieGoal ? parseInt(dailyCalorieGoal.toString()) : null;
-    const parsedWater = dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null;
-    const parsedCycle = cycleLength ? parseInt(cycleLength.toString()) : null;
+    const parsedCalorie = dailyCalorieGoal !== "" && dailyCalorieGoal !== null && dailyCalorieGoal !== undefined ? parseInt(dailyCalorieGoal.toString()) : null;
+    const parsedWater = dailyWaterGoal !== "" && dailyWaterGoal !== null && dailyWaterGoal !== undefined ? parseInt(dailyWaterGoal.toString()) : null;
+    const parsedCycle = cycleLength !== "" && cycleLength !== null && cycleLength !== undefined ? parseInt(cycleLength.toString()) : null;
 
     // Field presence and name checks
     if (!name || name.trim().length === 0) {
@@ -743,7 +743,7 @@ function ProfileContent() {
         body: JSON.stringify({
           name,
           gender: gender || null,
-          cycleLength: gender === "FEMALE" ? cycleLength : null,
+          cycleLength: gender === "FEMALE" ? parsedCycle : null,
           lastPeriodStart: gender === "FEMALE" ? (lastPeriodStart || null) : null,
           weight: parsedWeight,
           height: parsedHeight,
@@ -903,7 +903,8 @@ function ProfileContent() {
     ];
   };
 
-  const dietPlan = getIndianDietMeals(dietType, isLactoseIntolerant, isGlutenFree, dailyCalorieGoal);
+  const parsedCalorieNum = typeof dailyCalorieGoal === "number" ? dailyCalorieGoal : (parseInt(dailyCalorieGoal) || 2000);
+  const dietPlan = getIndianDietMeals(dietType, isLactoseIntolerant, isGlutenFree, parsedCalorieNum);
 
   // Medical Nutrition specific plan selectors
   const activeDiet = NUTRITION_DATABASE[medicalCondition] || NUTRITION_DATABASE.none;
@@ -1104,7 +1105,7 @@ function ProfileContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Daily Calorie Target (kcal)</label>
                 <input
@@ -1112,7 +1113,14 @@ function ProfileContent() {
                   value={dailyCalorieGoal}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setDailyCalorieGoal(parseInt(val) || 0);
+                    if (val === "") {
+                      setDailyCalorieGoal("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setDailyCalorieGoal(parsed);
+                      }
+                    }
                   }}
                   placeholder="2200"
                   min="0"
@@ -1129,7 +1137,14 @@ function ProfileContent() {
                   value={dailyWaterGoal}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setDailyWaterGoal(parseInt(val) || 0);
+                    if (val === "") {
+                      setDailyWaterGoal("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setDailyWaterGoal(parsed);
+                      }
+                    }
                   }}
                   placeholder="2500"
                   min="0"
@@ -1437,7 +1452,14 @@ function ProfileContent() {
                   value={cycleLength}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setCycleLength(parseInt(val) || 0);
+                    if (val === "") {
+                      setCycleLength("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setCycleLength(parsed);
+                      }
+                    }
                   }}
                   placeholder="28"
                   min="0"
