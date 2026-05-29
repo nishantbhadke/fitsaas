@@ -365,7 +365,7 @@ export default function WellnessPage() {
         </div>
 
         {/* Feature Enable/Disable Switcher */}
-        <div className="flex items-center gap-3 bg-card border border-border px-4 py-2.5 rounded-2xl shrink-0 shadow-sm">
+        <div className="flex items-center gap-3 bg-card border border-border px-4 py-2.5 rounded-2xl shrink-0 shadow-sm sm:mr-24 md:mr-28">
           <span className="text-xs font-bold text-foreground/70">Enable Tracker</span>
           <button
             onClick={() => handleToggleTracking(!trackingEnabled)}

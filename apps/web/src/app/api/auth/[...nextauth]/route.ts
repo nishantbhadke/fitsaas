@@ -44,31 +44,50 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            }),
+          });
+
+          if (!res.ok) {
+            console.error("Failed to sync Google user with backend. Status:", res.status);
+            return "/login?error=sync_failed";
+          }
+
+          const data = await res.json();
+          if (data.token) {
+            // Forward Fastify JWT token and user profile to the jwt callback
+            (user as any).appToken = data.token;
+            (user as any).user = data.user;
+            return true;
+          } else {
+            console.error("Backend sync succeeded but token is missing from response");
+            return "/login?error=sync_failed";
+          }
+        } catch (error) {
+          console.error("Failed to fetch backend sync for Google auth:", error);
+          return "/login?error=sync_failed";
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
         if (account.provider === "google") {
-          // Send Google profile to Fastify backend
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/auth/google`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: user.email,
-                name: user.name,
-                image: user.image,
-              }),
-            });
-            const data = await res.json();
-            if (res.ok && data.token) {
-              token.appToken = data.token; // The Fastify JWT
-              token.user = data.user;      // The Fastify User
-            }
-          } catch (error) {
-            console.error("Failed to sync with backend:", error);
-          }
+          // Retrieve synchronized Fastify JWT & user info set in signIn callback
+          token.appToken = (user as any).appToken;
+          token.user = (user as any).user;
         } else if (account.provider === "credentials") {
           token.appToken = (user as any).appToken;
           token.user = (user as any).user;
