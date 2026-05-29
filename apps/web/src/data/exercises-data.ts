@@ -1,4 +1,4 @@
-export type ExerciseCategory = "gym" | "calisthenics" | "weightlifting" | "cardio" | "yoga" | "pilates" | "custom";
+export type ExerciseCategory = "gym" | "calisthenics" | "weightlifting" | "cardio" | "yoga" | "pilates" | "meditation" | "custom";
 
 export interface Exercise {
   id: string;
@@ -16,6 +16,7 @@ export const categories: { id: ExerciseCategory; label: string; color: string; b
   { id: "cardio", label: "Cardio", color: "#10b981", bgColor: "#ecfdf5" },
   { id: "yoga", label: "Yoga & Flexibility", color: "#0d9488", bgColor: "#f0fdfa" },
   { id: "pilates", label: "Pilates & Core", color: "#db2777", bgColor: "#fdf2f8" },
+  { id: "meditation", label: "Meditation & Mindfulness", color: "#8b5cf6", bgColor: "#f5f3ff" },
   { id: "custom", label: "Custom", color: "#8b5cf6", bgColor: "#f5f3ff" },
 ];
 
@@ -27,6 +28,7 @@ export const categoryIcons: Record<ExerciseCategory, string> = {
   cardio: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
   yoga: "M12 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm5.8 4.2a1 1 0 0 0-1.4 0l-2.4 2.4-2-2a1 1 0 0 0-1.4 0L7.6 13.6a1 1 0 1 0 1.4 1.4L11 13v6a1 1 0 0 0 2 0v-6l2 2a1 1 0 0 0 1.4-1.4L14.6 11l2.4-2.4a1 1 0 0 0 0-1.4z",
   pilates: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm0-4h-2V7h2v8z",
+  meditation: "M12 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 13.5c-2.4 0-4.7-1.1-6.1-3.1-.4-.6-.2-1.4.4-1.8.6-.4 1.4-.2 1.8.4 1 .9 2.5 1.5 3.9 1.5s2.9-.6 3.9-1.5c.4-.6 1.2-.8 1.8-.4.6.4.8 1.2.4 1.8-1.4 2-3.7 3.1-6.1 3.1zM21 12c0 1.2-.5 2.3-1.4 3.1-.6.5-1.4.3-1.9-.3-.5-.6-.3-1.4.3-1.9.4-.3.6-.8.6-1.3 0-1.1-.9-2-2-2h-1V8.5c0-.8-.7-1.5-1.5-1.5h-1c-.8 0-1.5.7-1.5 1.5V9H7c-1.1 0-2 .9-2 2 0 .5.2 1 .6 1.3.6.5.8 1.3.3 1.9-.5.6-1.3.8-1.9.3C3.5 14.3 3 13.2 3 12c0-2.8 2.2-5 5-5h8c2.8 0 5 2.2 5 5z",
   custom: "M12 4v16m8-8H4",
 };
 
@@ -71,4 +73,9 @@ export const exercises: Exercise[] = [
   // PILATES
   { id: "home-pilates", name: "Mat Home Pilates", category: "pilates", description: "Core-focused bodyweight conditioning on a mat, focusing on pelvic alignment, deep abdominal strength, and postural control.", muscles: "Core, Abs, Obliques, Back, Lower Back, Glutes", icon: categoryIcons.pilates },
   { id: "pro-pilates", name: "Reformer Pro Pilates", category: "pilates", description: "Professional athletic Pilates utilizing spring-based reformer machines to create constant eccentric resistance and lengthen muscles.", muscles: "Core, Abs, Legs, Glutes, Back, Spine, Adductors, Full Body", icon: categoryIcons.pilates },
+
+  // MEDITATION & MINDFULNESS
+  { id: "mindful-breathing", name: "Mindful Breathing (Anapanasati)", category: "meditation", description: "Focus on breath flow to calm the nervous system, release stress, lower cortisol, and bring back daily presence.", muscles: "Mind, Brain, Lungs, Heart, Nervous System", icon: categoryIcons.meditation },
+  { id: "deep-zen", name: "Deep Zen Meditation (Zazen)", category: "meditation", description: "Traditional quiet sitting to improve executive focus, metabolic stability, blood pressure regulation, and deep mental focus.", muscles: "Mind, Brain, Heart, Posture, Spine", icon: categoryIcons.meditation },
+  { id: "body-scan", name: "Body Scan Sleep Meditation", category: "meditation", description: "Systematic relaxation shifting through physical centers to optimize physiological recovery, sleep quality, and active rest.", muscles: "Full Body, Brain, Nervous System, Heart", icon: categoryIcons.meditation },
 ];

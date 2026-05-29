@@ -11,6 +11,14 @@ interface Meal {
   portion: string;
 }
 
+interface ClinicalSubtypeConfig {
+  name: string;
+  description: string;
+  avoid?: string[];
+  superfoods?: string[];
+  guidelines?: string[];
+}
+
 interface DiseaseDietConfig {
   name: string;
   icon: string;
@@ -18,6 +26,7 @@ interface DiseaseDietConfig {
   avoid: string[];
   superfoods: string[];
   guidelines: string[];
+  subtypes?: Record<string, ClinicalSubtypeConfig>;
   meals: {
     [pref: string]: {
       [goal: string]: Meal[];
@@ -30,6 +39,50 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Diabetes (Type 2) / Insulin Resistance",
     icon: "🩸",
     description: "Low-glycemic index meals designed to stabilize blood glucose levels, optimize insulin sensitivity, and prevent post-prandial spikes.",
+    subtypes: {
+      type2: {
+        name: "Type 2 Diabetes & Insulin Resistance",
+        description: "Focuses on reversing insulin resistance, metabolic flexibility, weight management, and low carbohydrate spacing.",
+        avoid: [
+          "White bread, refined white flour (maida), white rice, and refined pasta",
+          "Sugary beverages, packaged juices, sodas, and energy drinks",
+          "Processed snacks, sweets, candies, and deep-fried foods",
+          "Excessive dried fruits (raisins, dates) and ultra-ripe bananas"
+        ],
+        superfoods: [
+          "Cinnamon (helps improve insulin sensitivity)",
+          "Chia seeds & Flaxseeds (packed with soluble fiber)",
+          "Fenugreek seeds (methi) soaked in water",
+          "Apple Cider Vinegar (ACV) before complex meals"
+        ]
+      },
+      type1: {
+        name: "Type 1 Diabetes (Autoimmune Control)",
+        description: "Focuses on precise carbohydrate counting, matching insulin-to-carbohydrate ratios, and stable complex carb release to prevent hypoglycemia.",
+        avoid: [
+          "Fast-acting processed sugars without matching insulin dose",
+          "Skipping complex meals while active background insulin is running"
+        ],
+        superfoods: [
+          "Consistent complex carbohydrate portions",
+          "Healthy fats (avocado, nuts) to slow stomach emptying",
+          "Psyllium husk (soluble fiber) for digestion stability"
+        ]
+      },
+      gestational: {
+        name: "Gestational Diabetes (Pregnancy-Induced)",
+        description: "Calibrated for both healthy fetal development and maternal glucose stability. Focuses on moderate-sized high-fiber complex carb meals.",
+        avoid: [
+          "Sugary breakfast cereals, sweetened milks, and fruit juices",
+          "Extreme ketogenic/low-carb fasting diets (not safe during pregnancy)"
+        ],
+        superfoods: [
+          "Organic Greek yogurt (rich in protein and calcium)",
+          "Moong sprouts (clean protein and high fiber)",
+          "Whole organic lentils (rich in folate and iron)"
+        ]
+      }
+    },
     avoid: [
       "White bread, refined white flour (maida), white rice, and refined pasta",
       "Sugary beverages, packaged juices, sodas, and energy drinks",
@@ -86,6 +139,32 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Hypertension (High Blood Pressure) / DASH Diet",
     icon: "❤️",
     description: "Highly aligned with the DASH (Dietary Approaches to Stop Hypertension) diet, prioritizing magnesium, potassium, and calcium while restricting sodium.",
+    subtypes: {
+      primary: {
+        name: "Primary (Essential) Hypertension",
+        description: "Driven by genetics, lifestyle, aging, and diet. Prioritizes natural sodium reduction, potassium retention, and blood vessel elasticity.",
+        avoid: [
+          "Table salt, pickles, papads, soy sauce, and packaged ketchups",
+          "Processed canned meats, hot dogs, and cured deli meats"
+        ],
+        superfoods: [
+          "Beetroot juice (contains nitrates that naturally expand blood vessels)",
+          "Bananas & Avocados (rich in potassium to balance sodium)"
+        ]
+      },
+      secondary: {
+        name: "Secondary (Organ-Driven) Hypertension",
+        description: "Driven by an underlying medical issue (such as kidney disease or hormonal disorders). Focuses on kidney-friendly low-sodium support.",
+        avoid: [
+          "Excess potassium if kidney function is compromised (consult physician)",
+          "Table salt, salted nuts, canned soups, and pre-packaged seasoning mixes"
+        ],
+        superfoods: [
+          "Garlic (contains allicin, known to naturally reduce blood pressure)",
+          "Pomegranate seeds (loaded with cardiovascular protective antioxidants)"
+        ]
+      }
+    },
     avoid: [
       "Table salt, pickles, papads, soy sauce, and packaged ketchups",
       "Processed canned meats, hot dogs, and cured deli meats",
@@ -142,6 +221,57 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "PCOS / PCOD / Endocrine Harmony",
     icon: "🌸",
     description: "Anti-inflammatory, hormone-balancing meals focused on low-GI complex carbs, healthy fats, and high fiber to curb androgen production and cycle fluctuations.",
+    subtypes: {
+      insulin: {
+        name: "Insulin-Resistant PCOS",
+        description: "The most common phenotype (affecting ~70%), driven by high insulin levels which impair ovulation and trigger excess ovarian testosterone.",
+        avoid: [
+          "Refined white sugars, high-fructose corn syrup, white flours",
+          "Cow's dairy (may contain insulin-like growth factors)"
+        ],
+        superfoods: [
+          "Myo-inositol rich foods (citrus fruits, organic beans)",
+          "Cinnamon (helps sensitize insulin receptors)"
+        ]
+      },
+      inflammatory: {
+        name: "Inflammatory PCOS",
+        description: "Driven by chronic low-grade systemic inflammation, causing cycle irregularities, fatigue, gut distress, and elevated androgens.",
+        avoid: [
+          "Processed seed oils (canola, corn oil), gluten, and chemical food additives",
+          "Deep-fried foods, high-mercury seafood, and hydrogenated fats"
+        ],
+        superfoods: [
+          "Turmeric & Ginger (powerful anti-inflammatory agents)",
+          "Wild salmon (rich in anti-inflammatory Omega-3 fatty acids)",
+          "Green tea & Spearmint tea (contains powerful antioxidants)"
+        ]
+      },
+      adrenal: {
+        name: "Adrenal PCOS (Stress-Driven)",
+        description: "Driven by an abnormal response to chronic stress, characterized by elevated DHEA-S (an adrenal androgen) rather than ovarian testosterone.",
+        avoid: [
+          "Excess caffeine, skipping meals, extreme high-intensity interval training (HIIT)",
+          "Refined sugars and late-night digital screen usage"
+        ],
+        superfoods: [
+          "Magnesium-rich foods (pumpkin seeds, almonds, dark chocolate)",
+          "Soothing herbal teas (chamomile, spearmint to lower stress androgens)"
+        ]
+      },
+      postpill: {
+        name: "Post-Pill PCOS (Contraceptive Rebound)",
+        description: "A temporary metabolic/androgen rebound surge that occurs after stopping oral contraceptive pills, which masked underlying conditions.",
+        avoid: [
+          "Hormone-disrupting plastics, excess soy protein isolates",
+          "Processed processed snacks and seed oils"
+        ],
+        superfoods: [
+          "Zinc-rich foods (pumpkin seeds, spinach, organic red lentils)",
+          "Cruciferous vegetables (steamed/cooked) to aid hormone clearance"
+        ]
+      }
+    },
     avoid: [
       "Refined sugar, corn syrup, white sugar, and commercial pastries",
       "Gluten-heavy processed items and standard dairy (if dairy-sensitive)",
@@ -198,6 +328,32 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Thyroid (Hypothyroidism) / Metabolic Support",
     icon: "🦋",
     description: "Nutritious support focusing on selenium, zinc, and tyrosine while monitoring goitrogens to optimize metabolic rate and endocrine production.",
+    subtypes: {
+      hypo: {
+        name: "Hypothyroidism (Slow metabolism / Hashimoto's)",
+        description: "Underactive thyroid function. Focuses on selenium, zinc, and tyrosine to optimize metabolic rate and endocrine production while limiting raw goitrogens.",
+        avoid: [
+          "Raw goitrogenic foods in large quantities (raw kale, cabbage, broccoli - cook them!)",
+          "Gluten (highly linked to Hashimoto's autoimmune flare-ups)"
+        ],
+        superfoods: [
+          "Brazil Nuts (richest source of Selenium - eat exactly 2 a day!)",
+          "Seaweed / Kelp (moderate Iodine)"
+        ]
+      },
+      hyper: {
+        name: "Hyperthyroidism (Overactive / Graves')",
+        description: "Overactive thyroid function. Focuses on anti-inflammatory nutrients, heart protection, and moderate calorie/protein support to maintain muscle mass.",
+        avoid: [
+          "High-iodine foods (iodized salt, kelp, seaweed, commercial cough syrups)",
+          "Excess caffeine and pre-workout stims (worsens rapid heart rate)"
+        ],
+        superfoods: [
+          "Cruciferous vegetables like broccoli, cabbage (help naturally reduce thyroid hormones)",
+          "Turmeric & Ginger (anti-inflammatory support)"
+        ]
+      }
+    },
     avoid: [
       "Raw goitrogenic foods in large quantities (raw kale, raw cabbage, raw broccoli, raw brussels sprouts - cook them instead!)",
       "Gluten (highly linked to Hashimotos flare-ups)",
@@ -254,6 +410,47 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "IBS / Sensitive Gut / Low-FODMAP Diet",
     icon: "🥦",
     description: "Highly digestible, soothing meals designed to avoid fermentation in the gut, prevent bloating, and promote smooth colon transit.",
+    subtypes: {
+      ibsc: {
+        name: "IBS-C (Constipation Predominant)",
+        description: "Focuses on high soluble fiber, maximum hydration, and mild prokinetics to naturally stimulate bowel motility without bloating.",
+        avoid: [
+          "Excessive coarse insoluble fiber (raw wheat bran) which can irritate the gut",
+          "Astringent foods like underripe bananas, heavy cheese, and highly processed flour"
+        ],
+        superfoods: [
+          "Psyllium husk (soaked in a large glass of water)",
+          "Stewed prunes and warm water first thing in the morning",
+          "Chia seeds (rich in soluble fiber to form soft gel)"
+        ]
+      },
+      ibsd: {
+        name: "IBS-D (Diarrhea Predominant)",
+        description: "Focuses on low-residue, soothing, binding foods to reduce bowel speed and calm an overactive colon.",
+        avoid: [
+          "Caffeine, alcohol, spicy chilis, and high-fat greasy meals",
+          "High-magnesium laxative foods and artificial sweeteners (sorbitol, xylitol)"
+        ],
+        superfoods: [
+          "Unripe bananas (highly binding, rich in resistant starch)",
+          "Jasmine/white rice (highly digestible low-residue starch)",
+          "Oatmeal cooked in water (soothing soluble fiber)"
+        ]
+      },
+      ibsm: {
+        name: "IBS-M (Mixed / Alternating)",
+        description: "Focuses on adaptogenic gut nutrition, balancing dietary fiber and gut motility depending on current symptomatic phases.",
+        avoid: [
+          "Strict raw vegetables, large portion sizes, carbonated sodas",
+          "Spicy, greasy foods and beans during flare-up phases"
+        ],
+        superfoods: [
+          "Peppermint tea (natural smooth muscle relaxant)",
+          "Ginger tea (regulates motility)",
+          "Steamed carrots and soft zucchini"
+        ]
+      }
+    },
     avoid: [
       "High-FODMAP veggies: onions, garlic, cauliflower, cabbage, brussels sprouts",
       "High-FODMAP fruits: apples, pears, mangoes, watermelons, cherries",
@@ -546,15 +743,15 @@ function ProfileContent() {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const [gender, setGender] = useState("");
-  const [cycleLength, setCycleLength] = useState(28);
+  const [cycleLength, setCycleLength] = useState<number | string>(28);
   const [lastPeriodStart, setLastPeriodStart] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [activityLevel, setActivityLevel] = useState("MODERATELY_ACTIVE");
-  const [dailyWaterGoal, setDailyWaterGoal] = useState(2000);
-  const [dailyCalorieGoal, setDailyCalorieGoal] = useState(2000);
+  const [dailyWaterGoal, setDailyWaterGoal] = useState<number | string>(2000);
+  const [dailyCalorieGoal, setDailyCalorieGoal] = useState<number | string>(2000);
 
   // Diet customizer state
   const [dietPlanEnabled, setDietPlanEnabled] = useState(false);
@@ -565,8 +762,13 @@ function ProfileContent() {
   // Medical Nutrition States
   const [hasMedicalHistory, setHasMedicalHistory] = useState(false);
   const [medicalCondition, setMedicalCondition] = useState("none");
+  const [medicalSubtype, setMedicalSubtype] = useState("");
   const [dietGoal, setDietGoal] = useState("loss");
   const [copied, setCopied] = useState(false);
+
+  // Unified Diet Planner States
+  const [customDietNotes, setCustomDietNotes] = useState("");
+  const [activeDietTab, setActiveDietTab] = useState<"clinical" | "indian" | "custom" | string>("indian");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -633,14 +835,40 @@ function ProfileContent() {
         const email = session.user.email;
         const savedHasMedical = localStorage.getItem(`has_medical_${email}`);
         const savedDisease = localStorage.getItem(`diet_disease_${email}`);
+        const savedSubtype = localStorage.getItem(`diet_subtype_${email}`);
         const savedGoal = localStorage.getItem(`diet_goal_${email}`);
+        const savedCustomNotes = localStorage.getItem(`custom_diet_notes_${email}`);
 
         if (savedHasMedical) setHasMedicalHistory(savedHasMedical === "true");
-        if (savedDisease) setMedicalCondition(savedDisease);
+        if (savedDisease) {
+          setMedicalCondition(savedDisease);
+          if (savedSubtype) {
+            setMedicalSubtype(savedSubtype);
+          } else {
+            const matchingConfig = NUTRITION_DATABASE[savedDisease];
+            if (matchingConfig?.subtypes) {
+              setMedicalSubtype(Object.keys(matchingConfig.subtypes)[0]);
+            } else {
+              setMedicalSubtype("");
+            }
+          }
+        }
         if (savedGoal) setDietGoal(savedGoal);
+        if (savedCustomNotes) setCustomDietNotes(savedCustomNotes);
       }
     }
   }, [status, fetchProfile, session]);
+
+  // Set tab on initial load or toggle
+  useEffect(() => {
+    if (hasMedicalHistory) {
+      setActiveDietTab("clinical");
+    } else if (dietPlanEnabled) {
+      setActiveDietTab("indian");
+    } else {
+      setActiveDietTab("custom");
+    }
+  }, [hasMedicalHistory, dietPlanEnabled]);
 
   const handleHasMedicalChange = (checked: boolean) => {
     setHasMedicalHistory(checked);
@@ -649,10 +877,39 @@ function ProfileContent() {
     }
   };
 
+  const handleCustomDietNotesChange = (val: string) => {
+    setCustomDietNotes(val);
+    if (session?.user?.email) {
+      localStorage.setItem(`custom_diet_notes_${session.user.email}`, val);
+    }
+  };
+
   const handleMedicalConditionChange = (disease: string) => {
     setMedicalCondition(disease);
     if (session?.user?.email) {
       localStorage.setItem(`diet_disease_${session.user.email}`, disease);
+    }
+    
+    // Auto-default subtype if subtypes exist
+    const matchingConfig = NUTRITION_DATABASE[disease];
+    if (matchingConfig?.subtypes) {
+      const defaultSubtype = Object.keys(matchingConfig.subtypes)[0];
+      setMedicalSubtype(defaultSubtype);
+      if (session?.user?.email) {
+        localStorage.setItem(`diet_subtype_${session.user.email}`, defaultSubtype);
+      }
+    } else {
+      setMedicalSubtype("");
+      if (session?.user?.email) {
+        localStorage.removeItem(`diet_subtype_${session.user.email}`);
+      }
+    }
+  };
+
+  const handleMedicalSubtypeChange = (subtype: string) => {
+    setMedicalSubtype(subtype);
+    if (session?.user?.email) {
+      localStorage.setItem(`diet_subtype_${session.user.email}`, subtype);
     }
   };
 
@@ -671,9 +928,9 @@ function ProfileContent() {
     const parsedWeight = weight ? parseFloat(weight) : null;
     const parsedHeight = height ? parseFloat(height) : null;
     const parsedTargetWeight = targetWeight ? parseFloat(targetWeight) : null;
-    const parsedCalorie = dailyCalorieGoal ? parseInt(dailyCalorieGoal.toString()) : null;
-    const parsedWater = dailyWaterGoal ? parseInt(dailyWaterGoal.toString()) : null;
-    const parsedCycle = cycleLength ? parseInt(cycleLength.toString()) : null;
+    const parsedCalorie = dailyCalorieGoal !== "" && dailyCalorieGoal !== null && dailyCalorieGoal !== undefined ? parseInt(dailyCalorieGoal.toString()) : null;
+    const parsedWater = dailyWaterGoal !== "" && dailyWaterGoal !== null && dailyWaterGoal !== undefined ? parseInt(dailyWaterGoal.toString()) : null;
+    const parsedCycle = cycleLength !== "" && cycleLength !== null && cycleLength !== undefined ? parseInt(cycleLength.toString()) : null;
 
     // Field presence and name checks
     if (!name || name.trim().length === 0) {
@@ -743,7 +1000,7 @@ function ProfileContent() {
         body: JSON.stringify({
           name,
           gender: gender || null,
-          cycleLength: gender === "FEMALE" ? cycleLength : null,
+          cycleLength: gender === "FEMALE" ? parsedCycle : null,
           lastPeriodStart: gender === "FEMALE" ? (lastPeriodStart || null) : null,
           weight: parsedWeight,
           height: parsedHeight,
@@ -903,10 +1160,17 @@ function ProfileContent() {
     ];
   };
 
-  const dietPlan = getIndianDietMeals(dietType, isLactoseIntolerant, isGlutenFree, dailyCalorieGoal);
+  const parsedCalorieNum = typeof dailyCalorieGoal === "number" ? dailyCalorieGoal : (parseInt(dailyCalorieGoal) || 2000);
+  const dietPlan = getIndianDietMeals(dietType, isLactoseIntolerant, isGlutenFree, parsedCalorieNum);
 
   // Medical Nutrition specific plan selectors
   const activeDiet = NUTRITION_DATABASE[medicalCondition] || NUTRITION_DATABASE.none;
+  const activeSubtypeInfo = activeDiet.subtypes && medicalSubtype ? activeDiet.subtypes[medicalSubtype] : null;
+  const displayDescription = activeSubtypeInfo?.description || activeDiet.description;
+  const displayAvoid = activeSubtypeInfo?.avoid || activeDiet.avoid;
+  const displaySuperfoods = activeSubtypeInfo?.superfoods || activeDiet.superfoods;
+  const displayGuidelines = activeSubtypeInfo?.guidelines || activeDiet.guidelines;
+
   const mappedDietPref = dietType === "VEGETARIAN" || dietType === "VEGAN" ? "veg" : "nonveg";
   const medicalMeals = activeDiet.meals[mappedDietPref]?.[dietGoal] || activeDiet.meals.veg.loss;
 
@@ -914,7 +1178,7 @@ function ProfileContent() {
     const mealText = medicalMeals
       .map((m) => `[${m.time}] ${m.title} - ${m.items.join(", ")} (${m.portion})`)
       .join("\n");
-    const fullText = `DIET PLAN: ${activeDiet.name} (${mappedDietPref.toUpperCase()} - ${dietGoal.toUpperCase()})\n\nDescription:\n${activeDiet.description}\n\nDaily Schedule:\n${mealText}\n\nSuperfoods to Include:\n${activeDiet.superfoods.map((s) => `• ${s}`).join("\n")}\n\nFoods to Strictly Avoid:\n${activeDiet.avoid.map((a) => `• ${a}`).join("\n")}\n\nDisclaimers: Consult your registered dietitian/physician before adopting any custom program.`;
+    const fullText = `DIET PLAN: ${activeDiet.name}${activeSubtypeInfo ? ` (${activeSubtypeInfo.name})` : ""} (${mappedDietPref.toUpperCase()} - ${dietGoal.toUpperCase()})\n\nDescription:\n${displayDescription}\n\nDaily Schedule:\n${mealText}\n\nSuperfoods to Include:\n${displaySuperfoods.map((s) => `• ${s}`).join("\n")}\n\nFoods to Strictly Avoid:\n${displayAvoid.map((a) => `• ${a}`).join("\n")}\n\nDisclaimers: Consult your registered dietitian/physician before adopting any custom program.`;
 
     navigator.clipboard.writeText(fullText);
     setCopied(true);
@@ -1104,7 +1368,7 @@ function ProfileContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-2">Daily Calorie Target (kcal)</label>
                 <input
@@ -1112,7 +1376,14 @@ function ProfileContent() {
                   value={dailyCalorieGoal}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setDailyCalorieGoal(parseInt(val) || 0);
+                    if (val === "") {
+                      setDailyCalorieGoal("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setDailyCalorieGoal(parsed);
+                      }
+                    }
                   }}
                   placeholder="2200"
                   min="0"
@@ -1129,7 +1400,14 @@ function ProfileContent() {
                   value={dailyWaterGoal}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setDailyWaterGoal(parseInt(val) || 0);
+                    if (val === "") {
+                      setDailyWaterGoal("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setDailyWaterGoal(parsed);
+                      }
+                    }
                   }}
                   placeholder="2500"
                   min="0"
@@ -1182,17 +1460,32 @@ function ProfileContent() {
                 </label>
               </div>
               {hasMedicalHistory && (
-                <select
-                  value={medicalCondition}
-                  onChange={(e) => handleMedicalConditionChange(e.target.value)}
-                  className="h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate"
-                >
-                  {Object.entries(NUTRITION_DATABASE).map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {value.icon} {value.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0 items-end sm:items-center max-w-[320px]">
+                  <select
+                    value={medicalCondition}
+                    onChange={(e) => handleMedicalConditionChange(e.target.value)}
+                    className="h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate"
+                  >
+                    {Object.entries(NUTRITION_DATABASE).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.icon} {value.name}
+                      </option>
+                    ))}
+                  </select>
+                  {NUTRITION_DATABASE[medicalCondition]?.subtypes && (
+                    <select
+                      value={medicalSubtype}
+                      onChange={(e) => handleMedicalSubtypeChange(e.target.value)}
+                      className="h-9 px-3 rounded-lg border border-brand-500/20 bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate animate-in slide-in-from-top-1 duration-200"
+                    >
+                      {Object.entries(NUTRITION_DATABASE[medicalCondition].subtypes || {}).map(([key, value]) => (
+                        <option key={key} value={key}>
+                          📌 {value.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -1231,190 +1524,308 @@ function ProfileContent() {
           </div>
         )}
 
-        {/* Dynamic Medical Nutrition Plan */}
-        {hasMedicalHistory && (
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex items-start gap-4 border-b border-border pb-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex shrink-0 items-center justify-center text-3xl shadow-sm">
-                {activeDiet.icon}
-              </div>
-              <div className="flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-brand-500">Therapeutic Medical Target</span>
-                <h2 className="text-xl font-bold text-foreground mt-0.5">{activeDiet.name}</h2>
-                <p className="text-xs text-foreground/60 mt-1.5 leading-relaxed">{activeDiet.description}</p>
-              </div>
-            </div>
-
-            {/* Daily Schedule Card */}
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center">
+        {/* Unified Personalized Diet & Nutrition Planner Section */}
+        {(dietPlanEnabled || hasMedicalHistory) && (
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-300">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🍛</span>
                 <div>
-                  <h3 className="text-sm font-bold">Daily Nutrition Schedule</h3>
-                  <p className="text-[11px] text-foreground/45">Tailored meals for your target condition and calorie budget.</p>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-brand-500">Unified Nutrition Dashboard</span>
+                  <h2 className="text-xl font-bold text-foreground">Your Personalized Diet & Nutrition Plan</h2>
                 </div>
-                
-                {/* Micro selectors: Goal & Copy Plan */}
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                  <div className="flex rounded-lg overflow-hidden border border-border p-0.5 bg-background">
-                    {[
-                      { id: "loss", label: "Loss 📉" },
-                      { id: "gain", label: "Gain 📈" }
-                    ].map((g) => (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => handleDietGoalChange(g.id)}
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded transition-colors ${
-                          dietGoal === g.id
-                            ? "bg-brand-500 text-white"
-                            : "text-foreground/60 hover:text-foreground"
-                        }`}
-                      >
-                        {g.label}
-                      </button>
-                    ))}
-                  </div>
+              </div>
+              
+              {/* Tab Switchers */}
+              <div className="flex bg-background/50 border border-border rounded-xl p-0.5 self-start sm:self-center">
+                {hasMedicalHistory && (
                   <button
                     type="button"
-                    onClick={handleCopyPlan}
-                    className="h-7 px-3 rounded-lg bg-foreground text-background text-[10px] font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                    onClick={() => setActiveDietTab("clinical")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeDietTab === "clinical"
+                        ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                        : "text-foreground/60 hover:text-foreground"
+                    }`}
                   >
-                    {copied ? "✅ COPIED!" : "📋 COPY PLAN"}
+                    <span>🩺</span> Clinical Diet
                   </button>
+                )}
+                {dietPlanEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveDietTab("indian")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeDietTab === "indian"
+                        ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                        : "text-foreground/60 hover:text-foreground"
+                    }`}
+                  >
+                    <span>🥗</span> Indian Protein Diet
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setActiveDietTab("custom")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeDietTab === "custom"
+                      ? "bg-brand-500 text-white shadow-sm font-extrabold"
+                      : "text-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  <span>📝</span> Custom Diet
+                </button>
+              </div>
+            </div>
+
+            {/* TAB 1: Clinical Diet Plan */}
+            {activeDietTab === "clinical" && hasMedicalHistory && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex shrink-0 items-center justify-center text-3xl shadow-sm text-emerald-500">
+                    {activeDiet.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <span>Therapeutic Target:</span> {activeDiet.name}{activeSubtypeInfo ? ` (${activeSubtypeInfo.name})` : ""}
+                    </h3>
+                    <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{displayDescription}</p>
+                  </div>
+                </div>
+
+                {/* Daily Schedule Card */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center">
+                    <div>
+                      <h3 className="text-sm font-bold">Daily Clinical Timetable</h3>
+                      <p className="text-[11px] text-foreground/45">Custom calibrated for your target condition and calorie budget.</p>
+                    </div>
+                    
+                    {/* Micro selectors: Goal & Copy Plan */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                      <div className="flex rounded-lg overflow-hidden border border-border p-0.5 bg-background">
+                        {[
+                          { id: "loss", label: "Loss 📉" },
+                          { id: "gain", label: "Gain 📈" }
+                        ].map((g) => (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => handleDietGoalChange(g.id)}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded transition-colors ${
+                              dietGoal === g.id
+                                ? "bg-brand-500 text-white"
+                                : "text-foreground/60 hover:text-foreground"
+                            }`}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyPlan}
+                        className="h-7 px-3 rounded-lg bg-foreground text-background text-[10px] font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                      >
+                        {copied ? "✅ COPIED!" : "📋 COPY PLAN"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {medicalMeals.map((meal, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center p-3.5 rounded-xl border border-border bg-background/30 hover:border-brand-500/20 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-semibold text-foreground/40 shrink-0 bg-foreground/5 h-7 px-2 rounded-lg flex items-center justify-center">
+                            {meal.time}
+                          </span>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">{meal.title}</h4>
+                            <p className="text-xs text-foreground/75 leading-relaxed mt-0.5">
+                              {meal.items.join(" + ")}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-500 border border-brand-500/20 px-2 py-0.5 rounded-md">
+                          {meal.portion}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Avoid & Include Foods Split Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Foods to strictly avoid */}
+                  <div className="border border-red-500/20 bg-red-500/5 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-red-500 flex items-center gap-1.5">
+                      ❌ Foods to Strictly Avoid
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      {displayAvoid.map((item, index) => (
+                        <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-500/60 leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Superfoods to actively include */}
+                  <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-4 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+                      🌿 Nutritional Superfoods
+                    </h3>
+                    <ul className="flex flex-col gap-2">
+                      {displaySuperfoods.map((item, index) => (
+                        <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500/60 leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Condition Specific Guidelines Card */}
+                <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-background/25">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/75">Key Lifestyle & Diet Guidelines</h3>
+                  <ul className="flex flex-col gap-2.5">
+                    {displayGuidelines.map((guide, index) => (
+                      <li key={index} className="flex gap-2 items-start text-xs text-foreground/80 leading-relaxed">
+                        <span className="w-4.5 h-4.5 shrink-0 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded-full flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        <p>{guide}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
+            )}
 
-              <div className="flex flex-col gap-3">
-                {medicalMeals.map((meal, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:items-center p-3.5 rounded-xl border border-border bg-background/30 hover:border-brand-500/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-semibold text-foreground/40 shrink-0 bg-foreground/5 h-7 px-2 rounded-lg flex items-center justify-center">
-                        {meal.time}
-                      </span>
+            {/* TAB 2: Indian High-Protein Diet Plan */}
+            {activeDietTab === "indian" && dietPlanEnabled && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-emerald-500">Dietary Preferences & Sensitivity Filters</h4>
+                    <p className="text-[10px] text-foreground/60 leading-relaxed">Customize your split plan for dynamic lactose or gluten requirements.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        id="lactoseToggle"
+                        checked={isLactoseIntolerant}
+                        onChange={(e) => setIsLactoseIntolerant(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded text-emerald-500 focus:ring-brand-500 bg-background"
+                      />
+                      <label htmlFor="lactoseToggle" className="text-[10px] font-black uppercase tracking-wider text-foreground/60 cursor-pointer">
+                        Lactose-Free 🥛
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        id="glutenToggle"
+                        checked={isGlutenFree}
+                        onChange={(e) => setIsGlutenFree(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded text-emerald-500 focus:ring-brand-500 bg-background"
+                      />
+                      <label htmlFor="glutenToggle" className="text-[10px] font-black uppercase tracking-wider text-foreground/60 cursor-pointer">
+                        Gluten-Free 🌾
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-foreground/60 leading-relaxed">
+                  Based on your custom daily calorie budget of <strong className="text-foreground">{dailyCalorieGoal} kcal</strong>, 
+                  here is your tailored High-Protein Indian Meal Plan recommendations:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                  {dietPlan.map((d, i) => (
+                    <div key={i} className="bg-background border border-border rounded-xl p-4 flex flex-col justify-between gap-2 hover:border-brand-500/20 transition-all">
                       <div>
-                        <h4 className="font-bold text-xs text-foreground">{meal.title}</h4>
-                        <p className="text-xs text-foreground/75 leading-relaxed mt-0.5">
-                          {meal.items.join(" + ")}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-emerald-500 uppercase tracking-wider">{d.name}</span>
+                          {d.kcal && (
+                            <span className="text-[10px] font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full">
+                              {d.kcal} kcal
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs mt-2 leading-relaxed text-foreground/80">{d.desc}</p>
                       </div>
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-500 border border-brand-500/20 px-2 py-0.5 rounded-md">
-                      {meal.portion}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Avoid & Include Foods Split Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Foods to strictly avoid */}
-              <div className="border border-red-500/20 bg-red-500/5 rounded-xl p-4 flex flex-col gap-3">
-                <h3 className="text-xs font-bold text-red-500 flex items-center gap-1.5">
-                  ❌ Foods to Strictly Avoid
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {activeDiet.avoid.map((item, index) => (
-                    <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-500/60 leading-relaxed">
-                      {item}
-                    </li>
                   ))}
-                </ul>
-              </div>
-
-              {/* Superfoods to actively include */}
-              <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-4 flex flex-col gap-3">
-                <h3 className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
-                  🌿 Nutritional Superfoods
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {activeDiet.superfoods.map((item, index) => (
-                    <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500/60 leading-relaxed">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Condition Specific Guidelines Card */}
-            <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-background/25">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/75">Key Lifestyle & Diet Guidelines</h3>
-              <ul className="flex flex-col gap-2.5">
-                {activeDiet.guidelines.map((guide, index) => (
-                  <li key={index} className="flex gap-2 items-start text-xs text-foreground/80 leading-relaxed">
-                    <span className="w-4.5 h-4.5 shrink-0 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded-full flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                    <p>{guide}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Dynamic Indian Protein Diet Selection */}
-        {dietPlanEnabled && (
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🍛</span>
-                <h3 className="text-base font-bold text-emerald-500 uppercase tracking-wider">Indian High-Protein Diet Plan</h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    id="lactoseToggle"
-                    checked={isLactoseIntolerant}
-                    onChange={(e) => setIsLactoseIntolerant(e.target.checked)}
-                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
-                  />
-                  <label htmlFor="lactoseToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
-                    Lactose-Free
-                  </label>
-                </div>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    id="glutenToggle"
-                    checked={isGlutenFree}
-                    onChange={(e) => setIsGlutenFree(e.target.checked)}
-                    className="h-3 w-3 rounded text-emerald-500 focus:ring-brand-500"
-                  />
-                  <label htmlFor="glutenToggle" className="text-[10px] font-bold uppercase tracking-wider text-foreground/60 cursor-pointer">
-                    Gluten-Free
-                  </label>
                 </div>
               </div>
-            </div>
+            )}
 
-            <p className="text-xs text-foreground/60 leading-relaxed">
-              Based on your custom daily calorie budget of <strong className="text-foreground">{dailyCalorieGoal} kcal</strong>, 
-              here is your tailored High-Protein Indian Meal Plan recommendations:
-            </p>
+            {/* TAB 3: My Custom Diet Plan */}
+            {activeDietTab === "custom" && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-foreground">📝 Custom Meal Planner</h3>
+                  <p className="text-xs text-foreground/60 leading-relaxed">
+                    Have absolute freedom to create your custom daily meal routine, supplement schedule, or combine suggested recipes. Quick-tap emojis to insert them easily!
+                  </p>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-              {dietPlan.map((d, i) => (
-                <div key={i} className="bg-background border border-border rounded-xl p-4 flex flex-col justify-between gap-2">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-emerald-500 uppercase tracking-wider">{d.name}</span>
-                      {d.kcal && (
-                        <span className="text-[10px] font-bold bg-brand-500/10 text-emerald-500 px-2 py-0.5 rounded-full">
-                          {d.kcal} kcal
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs mt-2 leading-relaxed text-foreground/80">{d.desc}</p>
+                {/* Emojis list */}
+                <div className="flex flex-wrap gap-1.5 border border-border rounded-xl p-3 bg-background/30">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-foreground/50 self-center mr-2">Quick Emojis:</span>
+                  {[
+                    { char: "🍳", label: "Eggs" },
+                    { char: "🥗", label: "Salad" },
+                    { char: "🥑", label: "Fats" },
+                    { char: "🍗", label: "Chicken" },
+                    { char: "🐟", label: "Fish" },
+                    { char: "🥛", label: "Whey" },
+                    { char: "🍵", label: "Green Tea" },
+                    { char: "🌾", label: "Carbs" },
+                    { char: "🍎", label: "Apple" },
+                    { char: "🍌", label: "Banana" },
+                    { char: "🥜", label: "Nuts" },
+                    { char: "💧", label: "Water" },
+                    { char: "💪", label: "Fitness" },
+                    { char: "🩺", label: "Clinical" },
+                    { char: "💊", label: "Vitamins" }
+                  ].map((emoji) => (
+                    <button
+                      key={emoji.char}
+                      type="button"
+                      onClick={() => {
+                        handleCustomDietNotesChange(customDietNotes + " " + emoji.char);
+                      }}
+                      className="h-8 px-2.5 rounded-lg bg-background hover:bg-foreground/5 border border-border text-xs flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+                      title={emoji.label}
+                    >
+                      <span className="text-sm">{emoji.char}</span>
+                      <span className="text-[9px] font-semibold opacity-60 uppercase">{emoji.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={customDietNotes}
+                    onChange={(e) => handleCustomDietNotesChange(e.target.value)}
+                    placeholder={`e.g. 🍳 Breakfast: 4 Egg Whites scrambled + 1 whole wheat toast\n🥛 10:00 AM: 1 scoop of Whey protein + soaked walnuts\n🥗 Lunch: Soya chunks curry (100g) + 1 brown rice bowl\n🍵 5:00 PM: Green tea with high-fiber digestive biscuits\n💪 Dinner: Grilled paneer steaks with sautéed broccoli...`}
+                    rows={8}
+                    className="w-full bg-background/30 border border-border rounded-xl p-4 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all text-foreground placeholder:text-foreground/30 font-medium leading-relaxed"
+                  />
+                  <div className="absolute bottom-3 right-3 text-[10px] font-semibold text-emerald-500 flex items-center gap-1 opacity-70">
+                    <span>✨</span> Auto-saved to local storage
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1437,7 +1848,14 @@ function ProfileContent() {
                   value={cycleLength}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || parseInt(val) >= 0) setCycleLength(parseInt(val) || 0);
+                    if (val === "") {
+                      setCycleLength("");
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed) && parsed >= 0) {
+                        setCycleLength(parsed);
+                      }
+                    }
                   }}
                   placeholder="28"
                   min="0"
