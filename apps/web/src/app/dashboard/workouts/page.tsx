@@ -38,24 +38,44 @@ function ExerciseIcon({ category, size = 24 }: { category: ExerciseCategory; siz
 function WorkoutCard({
   exercise,
   onLog,
+  cycleTrackingEnabled = false,
 }: {
   exercise: Exercise;
   onLog: (name: string, duration: string, notes: string) => void;
+  cycleTrackingEnabled?: boolean;
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
+  const [weightWorked, setWeightWorked] = useState("");
+  const [trainedLighter, setTrainedLighter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const cat = categories.find((c) => c.id === exercise.category);
 
   const handleLog = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    await onLog(exercise.name, duration, notes);
+    
+    let prependedNotes = "";
+    if (weightWorked) {
+      prependedNotes += `🏋️ Weight: ${weightWorked} kg`;
+    }
+    if (trainedLighter) {
+      if (prependedNotes) prependedNotes += " | ";
+      prependedNotes += "🌸 Trained lighter due to active cycle phase";
+    }
+
+    const finalNotes = prependedNotes
+      ? (notes.trim() ? `${prependedNotes}\n${notes.trim()}` : prependedNotes)
+      : notes.trim();
+
+    await onLog(exercise.name, duration, finalNotes);
     setSubmitting(false);
     setDuration("");
     setNotes("");
+    setWeightWorked("");
+    setTrainedLighter(false);
     setIsFlipped(false);
   };
 
@@ -156,6 +176,45 @@ function WorkoutCard({
                 required
               />
             </div>
+            {(exercise.category === "gym" || exercise.category === "calisthenics" || exercise.category === "weightlifting") && (
+              <div className="space-y-3 p-3.5 rounded-xl border border-border bg-foreground/[0.02]">
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider block mb-1">
+                    Weight worked with (kg) <span className="text-[10px] text-foreground/30 lowercase font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={weightWorked}
+                    onChange={(e) => setWeightWorked(e.target.value)}
+                    placeholder="e.g. 45"
+                    min="0"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  />
+                </div>
+                {cycleTrackingEnabled && (
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/40 mt-1">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-foreground/75 uppercase tracking-wider">Trained Lighter</span>
+                      <span className="text-[9px] text-foreground/45 mt-0.5">Adjusted load due to active cycle phase</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTrainedLighter(!trainedLighter)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        trainedLighter ? "bg-rose-500" : "bg-foreground/15"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          trainedLighter ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">Notes</label>
               <textarea
@@ -184,23 +243,43 @@ function WorkoutCard({
 
 function CustomWorkoutCard({
   onLog,
+  cycleTrackingEnabled = false,
 }: {
   onLog: (name: string, duration: string, notes: string) => void;
+  cycleTrackingEnabled?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
+  const [weightWorked, setWeightWorked] = useState("");
+  const [trainedLighter, setTrainedLighter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleLog = async () => {
     if (!name.trim()) return;
     setSubmitting(true);
-    await onLog(name.trim(), duration, notes);
+
+    let prependedNotes = "";
+    if (weightWorked) {
+      prependedNotes += `🏋️ Weight: ${weightWorked} kg`;
+    }
+    if (trainedLighter) {
+      if (prependedNotes) prependedNotes += " | ";
+      prependedNotes += "🌸 Trained lighter due to active cycle phase";
+    }
+
+    const finalNotes = prependedNotes
+      ? (notes.trim() ? `${prependedNotes}\n${notes.trim()}` : prependedNotes)
+      : notes.trim();
+
+    await onLog(name.trim(), duration, finalNotes);
     setSubmitting(false);
     setName("");
     setDuration("");
     setNotes("");
+    setWeightWorked("");
+    setTrainedLighter(false);
     setIsOpen(false);
   };
 
@@ -247,6 +326,43 @@ function CustomWorkoutCard({
           min="1"
           className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground text-sm placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
         />
+        <div className="space-y-3 p-3.5 rounded-xl border border-border bg-foreground/[0.02]">
+          <div>
+            <label className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider block mb-1">
+              Weight worked with (kg) <span className="text-[10px] text-foreground/30 lowercase font-normal">(optional)</span>
+            </label>
+            <input
+              type="number"
+              step="any"
+              value={weightWorked}
+              onChange={(e) => setWeightWorked(e.target.value)}
+              placeholder="e.g. 45"
+              min="0"
+              className="w-full h-10 px-3 rounded-lg border border-border bg-background text-foreground text-xs placeholder:text-foreground/25 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+            />
+          </div>
+          {cycleTrackingEnabled && (
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/40 mt-1">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-foreground/75 uppercase tracking-wider">Trained Lighter</span>
+                <span className="text-[9px] text-foreground/45 mt-0.5">Adjusted load due to active cycle phase</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTrainedLighter(!trainedLighter)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  trainedLighter ? "bg-rose-500" : "bg-foreground/15"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    trainedLighter ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+        </div>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -471,9 +587,17 @@ export default function WorkoutsPage() {
           {/* Exercise Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map((exercise) => (
-              <WorkoutCard key={exercise.id} exercise={exercise} onLog={handleLog} />
+              <WorkoutCard 
+                key={exercise.id} 
+                exercise={exercise} 
+                onLog={handleLog} 
+                cycleTrackingEnabled={Boolean(session?.user && (session.user as any).menstrualTrackingEnabled)}
+              />
             ))}
-            <CustomWorkoutCard onLog={handleLog} />
+            <CustomWorkoutCard 
+              onLog={handleLog} 
+              cycleTrackingEnabled={Boolean(session?.user && (session.user as any).menstrualTrackingEnabled)}
+            />
           </div>
         </div>
 
