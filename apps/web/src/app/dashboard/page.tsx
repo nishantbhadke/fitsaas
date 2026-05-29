@@ -153,7 +153,8 @@ function WorkoutTypeChart({ workouts }: { workouts: Workout[] }) {
     { color: "#f59e0b", label: "Calisthenics" },
     { color: "#ef4444", label: "Weight Lifting" },
     { color: "#10b981", label: "Cardio" },
-    { color: "#8b5cf6", label: "Other" },
+    { color: "#8b5cf6", label: "Meditation" },
+    { color: "#a8a29e", label: "Other" },
   ];
 
   // Categorize workouts by name heuristic
@@ -161,6 +162,7 @@ function WorkoutTypeChart({ workouts }: { workouts: Workout[] }) {
   const calisKeywords = ["push-up", "pull-up", "dip", "plank", "muscle-up", "pushup", "pullup"];
   const liftKeywords = ["bench", "deadlift", "squat", "overhead", "barbell", "press"];
   const cardioKeywords = ["run", "cycling", "jump rope", "rowing", "hiit", "cardio", "jog", "walk"];
+  const medKeywords = ["meditat", "breath", "mindful", "zazen", "sleep med"];
 
   const categorized = workouts.map((w) => {
     const name = w.title.toLowerCase();
@@ -168,10 +170,11 @@ function WorkoutTypeChart({ workouts }: { workouts: Workout[] }) {
     if (calisKeywords.some((k) => name.includes(k))) return 1;
     if (liftKeywords.some((k) => name.includes(k))) return 2;
     if (cardioKeywords.some((k) => name.includes(k))) return 3;
-    return 4;
+    if (medKeywords.some((k) => name.includes(k))) return 4;
+    return 5;
   });
 
-  const counts = [0, 0, 0, 0, 0];
+  const counts = [0, 0, 0, 0, 0, 0];
   categorized.forEach((c) => counts[c]++);
   const total = workouts.length || 1;
 

@@ -11,6 +11,14 @@ interface Meal {
   portion: string;
 }
 
+interface ClinicalSubtypeConfig {
+  name: string;
+  description: string;
+  avoid?: string[];
+  superfoods?: string[];
+  guidelines?: string[];
+}
+
 interface DiseaseDietConfig {
   name: string;
   icon: string;
@@ -18,6 +26,7 @@ interface DiseaseDietConfig {
   avoid: string[];
   superfoods: string[];
   guidelines: string[];
+  subtypes?: Record<string, ClinicalSubtypeConfig>;
   meals: {
     [pref: string]: {
       [goal: string]: Meal[];
@@ -30,6 +39,50 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Diabetes (Type 2) / Insulin Resistance",
     icon: "🩸",
     description: "Low-glycemic index meals designed to stabilize blood glucose levels, optimize insulin sensitivity, and prevent post-prandial spikes.",
+    subtypes: {
+      type2: {
+        name: "Type 2 Diabetes & Insulin Resistance",
+        description: "Focuses on reversing insulin resistance, metabolic flexibility, weight management, and low carbohydrate spacing.",
+        avoid: [
+          "White bread, refined white flour (maida), white rice, and refined pasta",
+          "Sugary beverages, packaged juices, sodas, and energy drinks",
+          "Processed snacks, sweets, candies, and deep-fried foods",
+          "Excessive dried fruits (raisins, dates) and ultra-ripe bananas"
+        ],
+        superfoods: [
+          "Cinnamon (helps improve insulin sensitivity)",
+          "Chia seeds & Flaxseeds (packed with soluble fiber)",
+          "Fenugreek seeds (methi) soaked in water",
+          "Apple Cider Vinegar (ACV) before complex meals"
+        ]
+      },
+      type1: {
+        name: "Type 1 Diabetes (Autoimmune Control)",
+        description: "Focuses on precise carbohydrate counting, matching insulin-to-carbohydrate ratios, and stable complex carb release to prevent hypoglycemia.",
+        avoid: [
+          "Fast-acting processed sugars without matching insulin dose",
+          "Skipping complex meals while active background insulin is running"
+        ],
+        superfoods: [
+          "Consistent complex carbohydrate portions",
+          "Healthy fats (avocado, nuts) to slow stomach emptying",
+          "Psyllium husk (soluble fiber) for digestion stability"
+        ]
+      },
+      gestational: {
+        name: "Gestational Diabetes (Pregnancy-Induced)",
+        description: "Calibrated for both healthy fetal development and maternal glucose stability. Focuses on moderate-sized high-fiber complex carb meals.",
+        avoid: [
+          "Sugary breakfast cereals, sweetened milks, and fruit juices",
+          "Extreme ketogenic/low-carb fasting diets (not safe during pregnancy)"
+        ],
+        superfoods: [
+          "Organic Greek yogurt (rich in protein and calcium)",
+          "Moong sprouts (clean protein and high fiber)",
+          "Whole organic lentils (rich in folate and iron)"
+        ]
+      }
+    },
     avoid: [
       "White bread, refined white flour (maida), white rice, and refined pasta",
       "Sugary beverages, packaged juices, sodas, and energy drinks",
@@ -86,6 +139,32 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Hypertension (High Blood Pressure) / DASH Diet",
     icon: "❤️",
     description: "Highly aligned with the DASH (Dietary Approaches to Stop Hypertension) diet, prioritizing magnesium, potassium, and calcium while restricting sodium.",
+    subtypes: {
+      primary: {
+        name: "Primary (Essential) Hypertension",
+        description: "Driven by genetics, lifestyle, aging, and diet. Prioritizes natural sodium reduction, potassium retention, and blood vessel elasticity.",
+        avoid: [
+          "Table salt, pickles, papads, soy sauce, and packaged ketchups",
+          "Processed canned meats, hot dogs, and cured deli meats"
+        ],
+        superfoods: [
+          "Beetroot juice (contains nitrates that naturally expand blood vessels)",
+          "Bananas & Avocados (rich in potassium to balance sodium)"
+        ]
+      },
+      secondary: {
+        name: "Secondary (Organ-Driven) Hypertension",
+        description: "Driven by an underlying medical issue (such as kidney disease or hormonal disorders). Focuses on kidney-friendly low-sodium support.",
+        avoid: [
+          "Excess potassium if kidney function is compromised (consult physician)",
+          "Table salt, salted nuts, canned soups, and pre-packaged seasoning mixes"
+        ],
+        superfoods: [
+          "Garlic (contains allicin, known to naturally reduce blood pressure)",
+          "Pomegranate seeds (loaded with cardiovascular protective antioxidants)"
+        ]
+      }
+    },
     avoid: [
       "Table salt, pickles, papads, soy sauce, and packaged ketchups",
       "Processed canned meats, hot dogs, and cured deli meats",
@@ -142,6 +221,57 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "PCOS / PCOD / Endocrine Harmony",
     icon: "🌸",
     description: "Anti-inflammatory, hormone-balancing meals focused on low-GI complex carbs, healthy fats, and high fiber to curb androgen production and cycle fluctuations.",
+    subtypes: {
+      insulin: {
+        name: "Insulin-Resistant PCOS",
+        description: "The most common phenotype (affecting ~70%), driven by high insulin levels which impair ovulation and trigger excess ovarian testosterone.",
+        avoid: [
+          "Refined white sugars, high-fructose corn syrup, white flours",
+          "Cow's dairy (may contain insulin-like growth factors)"
+        ],
+        superfoods: [
+          "Myo-inositol rich foods (citrus fruits, organic beans)",
+          "Cinnamon (helps sensitize insulin receptors)"
+        ]
+      },
+      inflammatory: {
+        name: "Inflammatory PCOS",
+        description: "Driven by chronic low-grade systemic inflammation, causing cycle irregularities, fatigue, gut distress, and elevated androgens.",
+        avoid: [
+          "Processed seed oils (canola, corn oil), gluten, and chemical food additives",
+          "Deep-fried foods, high-mercury seafood, and hydrogenated fats"
+        ],
+        superfoods: [
+          "Turmeric & Ginger (powerful anti-inflammatory agents)",
+          "Wild salmon (rich in anti-inflammatory Omega-3 fatty acids)",
+          "Green tea & Spearmint tea (contains powerful antioxidants)"
+        ]
+      },
+      adrenal: {
+        name: "Adrenal PCOS (Stress-Driven)",
+        description: "Driven by an abnormal response to chronic stress, characterized by elevated DHEA-S (an adrenal androgen) rather than ovarian testosterone.",
+        avoid: [
+          "Excess caffeine, skipping meals, extreme high-intensity interval training (HIIT)",
+          "Refined sugars and late-night digital screen usage"
+        ],
+        superfoods: [
+          "Magnesium-rich foods (pumpkin seeds, almonds, dark chocolate)",
+          "Soothing herbal teas (chamomile, spearmint to lower stress androgens)"
+        ]
+      },
+      postpill: {
+        name: "Post-Pill PCOS (Contraceptive Rebound)",
+        description: "A temporary metabolic/androgen rebound surge that occurs after stopping oral contraceptive pills, which masked underlying conditions.",
+        avoid: [
+          "Hormone-disrupting plastics, excess soy protein isolates",
+          "Processed processed snacks and seed oils"
+        ],
+        superfoods: [
+          "Zinc-rich foods (pumpkin seeds, spinach, organic red lentils)",
+          "Cruciferous vegetables (steamed/cooked) to aid hormone clearance"
+        ]
+      }
+    },
     avoid: [
       "Refined sugar, corn syrup, white sugar, and commercial pastries",
       "Gluten-heavy processed items and standard dairy (if dairy-sensitive)",
@@ -198,6 +328,32 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "Thyroid (Hypothyroidism) / Metabolic Support",
     icon: "🦋",
     description: "Nutritious support focusing on selenium, zinc, and tyrosine while monitoring goitrogens to optimize metabolic rate and endocrine production.",
+    subtypes: {
+      hypo: {
+        name: "Hypothyroidism (Slow metabolism / Hashimoto's)",
+        description: "Underactive thyroid function. Focuses on selenium, zinc, and tyrosine to optimize metabolic rate and endocrine production while limiting raw goitrogens.",
+        avoid: [
+          "Raw goitrogenic foods in large quantities (raw kale, cabbage, broccoli - cook them!)",
+          "Gluten (highly linked to Hashimoto's autoimmune flare-ups)"
+        ],
+        superfoods: [
+          "Brazil Nuts (richest source of Selenium - eat exactly 2 a day!)",
+          "Seaweed / Kelp (moderate Iodine)"
+        ]
+      },
+      hyper: {
+        name: "Hyperthyroidism (Overactive / Graves')",
+        description: "Overactive thyroid function. Focuses on anti-inflammatory nutrients, heart protection, and moderate calorie/protein support to maintain muscle mass.",
+        avoid: [
+          "High-iodine foods (iodized salt, kelp, seaweed, commercial cough syrups)",
+          "Excess caffeine and pre-workout stims (worsens rapid heart rate)"
+        ],
+        superfoods: [
+          "Cruciferous vegetables like broccoli, cabbage (help naturally reduce thyroid hormones)",
+          "Turmeric & Ginger (anti-inflammatory support)"
+        ]
+      }
+    },
     avoid: [
       "Raw goitrogenic foods in large quantities (raw kale, raw cabbage, raw broccoli, raw brussels sprouts - cook them instead!)",
       "Gluten (highly linked to Hashimotos flare-ups)",
@@ -254,6 +410,47 @@ const NUTRITION_DATABASE: Record<string, DiseaseDietConfig> = {
     name: "IBS / Sensitive Gut / Low-FODMAP Diet",
     icon: "🥦",
     description: "Highly digestible, soothing meals designed to avoid fermentation in the gut, prevent bloating, and promote smooth colon transit.",
+    subtypes: {
+      ibsc: {
+        name: "IBS-C (Constipation Predominant)",
+        description: "Focuses on high soluble fiber, maximum hydration, and mild prokinetics to naturally stimulate bowel motility without bloating.",
+        avoid: [
+          "Excessive coarse insoluble fiber (raw wheat bran) which can irritate the gut",
+          "Astringent foods like underripe bananas, heavy cheese, and highly processed flour"
+        ],
+        superfoods: [
+          "Psyllium husk (soaked in a large glass of water)",
+          "Stewed prunes and warm water first thing in the morning",
+          "Chia seeds (rich in soluble fiber to form soft gel)"
+        ]
+      },
+      ibsd: {
+        name: "IBS-D (Diarrhea Predominant)",
+        description: "Focuses on low-residue, soothing, binding foods to reduce bowel speed and calm an overactive colon.",
+        avoid: [
+          "Caffeine, alcohol, spicy chilis, and high-fat greasy meals",
+          "High-magnesium laxative foods and artificial sweeteners (sorbitol, xylitol)"
+        ],
+        superfoods: [
+          "Unripe bananas (highly binding, rich in resistant starch)",
+          "Jasmine/white rice (highly digestible low-residue starch)",
+          "Oatmeal cooked in water (soothing soluble fiber)"
+        ]
+      },
+      ibsm: {
+        name: "IBS-M (Mixed / Alternating)",
+        description: "Focuses on adaptogenic gut nutrition, balancing dietary fiber and gut motility depending on current symptomatic phases.",
+        avoid: [
+          "Strict raw vegetables, large portion sizes, carbonated sodas",
+          "Spicy, greasy foods and beans during flare-up phases"
+        ],
+        superfoods: [
+          "Peppermint tea (natural smooth muscle relaxant)",
+          "Ginger tea (regulates motility)",
+          "Steamed carrots and soft zucchini"
+        ]
+      }
+    },
     avoid: [
       "High-FODMAP veggies: onions, garlic, cauliflower, cabbage, brussels sprouts",
       "High-FODMAP fruits: apples, pears, mangoes, watermelons, cherries",
@@ -565,6 +762,7 @@ function ProfileContent() {
   // Medical Nutrition States
   const [hasMedicalHistory, setHasMedicalHistory] = useState(false);
   const [medicalCondition, setMedicalCondition] = useState("none");
+  const [medicalSubtype, setMedicalSubtype] = useState("");
   const [dietGoal, setDietGoal] = useState("loss");
   const [copied, setCopied] = useState(false);
 
@@ -637,11 +835,24 @@ function ProfileContent() {
         const email = session.user.email;
         const savedHasMedical = localStorage.getItem(`has_medical_${email}`);
         const savedDisease = localStorage.getItem(`diet_disease_${email}`);
+        const savedSubtype = localStorage.getItem(`diet_subtype_${email}`);
         const savedGoal = localStorage.getItem(`diet_goal_${email}`);
         const savedCustomNotes = localStorage.getItem(`custom_diet_notes_${email}`);
 
         if (savedHasMedical) setHasMedicalHistory(savedHasMedical === "true");
-        if (savedDisease) setMedicalCondition(savedDisease);
+        if (savedDisease) {
+          setMedicalCondition(savedDisease);
+          if (savedSubtype) {
+            setMedicalSubtype(savedSubtype);
+          } else {
+            const matchingConfig = NUTRITION_DATABASE[savedDisease];
+            if (matchingConfig?.subtypes) {
+              setMedicalSubtype(Object.keys(matchingConfig.subtypes)[0]);
+            } else {
+              setMedicalSubtype("");
+            }
+          }
+        }
         if (savedGoal) setDietGoal(savedGoal);
         if (savedCustomNotes) setCustomDietNotes(savedCustomNotes);
       }
@@ -677,6 +888,28 @@ function ProfileContent() {
     setMedicalCondition(disease);
     if (session?.user?.email) {
       localStorage.setItem(`diet_disease_${session.user.email}`, disease);
+    }
+    
+    // Auto-default subtype if subtypes exist
+    const matchingConfig = NUTRITION_DATABASE[disease];
+    if (matchingConfig?.subtypes) {
+      const defaultSubtype = Object.keys(matchingConfig.subtypes)[0];
+      setMedicalSubtype(defaultSubtype);
+      if (session?.user?.email) {
+        localStorage.setItem(`diet_subtype_${session.user.email}`, defaultSubtype);
+      }
+    } else {
+      setMedicalSubtype("");
+      if (session?.user?.email) {
+        localStorage.removeItem(`diet_subtype_${session.user.email}`);
+      }
+    }
+  };
+
+  const handleMedicalSubtypeChange = (subtype: string) => {
+    setMedicalSubtype(subtype);
+    if (session?.user?.email) {
+      localStorage.setItem(`diet_subtype_${session.user.email}`, subtype);
     }
   };
 
@@ -932,6 +1165,12 @@ function ProfileContent() {
 
   // Medical Nutrition specific plan selectors
   const activeDiet = NUTRITION_DATABASE[medicalCondition] || NUTRITION_DATABASE.none;
+  const activeSubtypeInfo = activeDiet.subtypes && medicalSubtype ? activeDiet.subtypes[medicalSubtype] : null;
+  const displayDescription = activeSubtypeInfo?.description || activeDiet.description;
+  const displayAvoid = activeSubtypeInfo?.avoid || activeDiet.avoid;
+  const displaySuperfoods = activeSubtypeInfo?.superfoods || activeDiet.superfoods;
+  const displayGuidelines = activeSubtypeInfo?.guidelines || activeDiet.guidelines;
+
   const mappedDietPref = dietType === "VEGETARIAN" || dietType === "VEGAN" ? "veg" : "nonveg";
   const medicalMeals = activeDiet.meals[mappedDietPref]?.[dietGoal] || activeDiet.meals.veg.loss;
 
@@ -939,7 +1178,7 @@ function ProfileContent() {
     const mealText = medicalMeals
       .map((m) => `[${m.time}] ${m.title} - ${m.items.join(", ")} (${m.portion})`)
       .join("\n");
-    const fullText = `DIET PLAN: ${activeDiet.name} (${mappedDietPref.toUpperCase()} - ${dietGoal.toUpperCase()})\n\nDescription:\n${activeDiet.description}\n\nDaily Schedule:\n${mealText}\n\nSuperfoods to Include:\n${activeDiet.superfoods.map((s) => `• ${s}`).join("\n")}\n\nFoods to Strictly Avoid:\n${activeDiet.avoid.map((a) => `• ${a}`).join("\n")}\n\nDisclaimers: Consult your registered dietitian/physician before adopting any custom program.`;
+    const fullText = `DIET PLAN: ${activeDiet.name}${activeSubtypeInfo ? ` (${activeSubtypeInfo.name})` : ""} (${mappedDietPref.toUpperCase()} - ${dietGoal.toUpperCase()})\n\nDescription:\n${displayDescription}\n\nDaily Schedule:\n${mealText}\n\nSuperfoods to Include:\n${displaySuperfoods.map((s) => `• ${s}`).join("\n")}\n\nFoods to Strictly Avoid:\n${displayAvoid.map((a) => `• ${a}`).join("\n")}\n\nDisclaimers: Consult your registered dietitian/physician before adopting any custom program.`;
 
     navigator.clipboard.writeText(fullText);
     setCopied(true);
@@ -1221,17 +1460,32 @@ function ProfileContent() {
                 </label>
               </div>
               {hasMedicalHistory && (
-                <select
-                  value={medicalCondition}
-                  onChange={(e) => handleMedicalConditionChange(e.target.value)}
-                  className="h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate"
-                >
-                  {Object.entries(NUTRITION_DATABASE).map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {value.icon} {value.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0 items-end sm:items-center max-w-[320px]">
+                  <select
+                    value={medicalCondition}
+                    onChange={(e) => handleMedicalConditionChange(e.target.value)}
+                    className="h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate"
+                  >
+                    {Object.entries(NUTRITION_DATABASE).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.icon} {value.name}
+                      </option>
+                    ))}
+                  </select>
+                  {NUTRITION_DATABASE[medicalCondition]?.subtypes && (
+                    <select
+                      value={medicalSubtype}
+                      onChange={(e) => handleMedicalSubtypeChange(e.target.value)}
+                      className="h-9 px-3 rounded-lg border border-brand-500/20 bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer max-w-[180px] truncate animate-in slide-in-from-top-1 duration-200"
+                    >
+                      {Object.entries(NUTRITION_DATABASE[medicalCondition].subtypes || {}).map(([key, value]) => (
+                        <option key={key} value={key}>
+                          📌 {value.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -1334,9 +1588,9 @@ function ProfileContent() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                      <span>Therapeutic Target:</span> {activeDiet.name}
+                      <span>Therapeutic Target:</span> {activeDiet.name}{activeSubtypeInfo ? ` (${activeSubtypeInfo.name})` : ""}
                     </h3>
-                    <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{activeDiet.description}</p>
+                    <p className="text-xs text-foreground/60 mt-1 leading-relaxed">{displayDescription}</p>
                   </div>
                 </div>
 
@@ -1412,7 +1666,7 @@ function ProfileContent() {
                       ❌ Foods to Strictly Avoid
                     </h3>
                     <ul className="flex flex-col gap-2">
-                      {activeDiet.avoid.map((item, index) => (
+                      {displayAvoid.map((item, index) => (
                         <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-red-500/60 leading-relaxed">
                           {item}
                         </li>
@@ -1426,7 +1680,7 @@ function ProfileContent() {
                       🌿 Nutritional Superfoods
                     </h3>
                     <ul className="flex flex-col gap-2">
-                      {activeDiet.superfoods.map((item, index) => (
+                      {displaySuperfoods.map((item, index) => (
                         <li key={index} className="text-xs text-foreground/75 pl-3.5 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500/60 leading-relaxed">
                           {item}
                         </li>
@@ -1439,7 +1693,7 @@ function ProfileContent() {
                 <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-background/25">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/75">Key Lifestyle & Diet Guidelines</h3>
                   <ul className="flex flex-col gap-2.5">
-                    {activeDiet.guidelines.map((guide, index) => (
+                    {displayGuidelines.map((guide, index) => (
                       <li key={index} className="flex gap-2 items-start text-xs text-foreground/80 leading-relaxed">
                         <span className="w-4.5 h-4.5 shrink-0 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded-full flex items-center justify-center">
                           {index + 1}
