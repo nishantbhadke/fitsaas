@@ -7,6 +7,8 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "npm run generate -w database --if-present",
+    "predev": "npm run generate -w database --if-present",
     "dev": "npm run dev --workspaces --if-present"
   },
   "overrides": {
