@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession } from "better-auth/plugins";
 import dbPkg from "database";

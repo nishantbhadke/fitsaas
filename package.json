@@ -12,12 +12,9 @@
     "dev": "npm run dev --workspaces --if-present"
   },
   "overrides": {
-    "postcss": "^8.5.10",
-    "kysely": "0.27.0"
+    "postcss": "^8.5.10"
   },
-  "devDependencies": {
-    "kysely": "0.27.0"
-  },
+  "devDependencies": {},
   "dependencies": {
     "lightningcss": "^1.32.0"
   },
