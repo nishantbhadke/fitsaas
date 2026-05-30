@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitSaaS Ecosystem — Interactive Documentation</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Mermaid.js for rendering diagrams in-browser -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    // Initialize Mermaid with a dark theme fitting for our dark mode dashboard
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      securityLevel: 'loose',
+      themeVariables: {
+        background: '#09090b',
+        primaryColor: '#10b981',
+        primaryTextColor: '#ffffff',
+        lineColor: '#34d399',
+        fontSize: '13px'
+      }
+    });
+  </script>
+</head>
+<body>
+
+  <!-- Glow Background Decorations -->
+  <div class="glow-container">
+    <div class="glow-blob-1"></div>
+    <div class="glow-blob-2"></div>
+  </div>
+
+  <div class="layout-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-section">
+        <div class="logo-badge">F</div>
+        <div>
+          <h1 class="logo-text-title">FitSaaS</h1>
+          <div class="logo-text-subtitle">Static Documentation</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-heading">Product Overview</div>
+        <button class="nav-item active" onclick="scrollToSection('about')">👋 Welcome to FitSaaS</button>
+        <button class="nav-item" onclick="scrollToSection('architecture')">🏗️ System Architecture</button>
+        <button class="nav-item" onclick="scrollToSection('features')">⚡ Key Features</button>
+        <button class="nav-item" onclick="scrollToSection('privacy')">🛡️ Data & Privacy</button>
+        <button class="nav-item" onclick="scrollToSection('faqs')">❓ FAQ & Stability</button>
+
+        <div class="nav-heading" style="margin-top: 1.5rem;">Technical Attachments</div>
+        <a href="RCA_Sign_In_Issue.md" class="nav-item" target="_blank">📄 Production RCA log</a>
+        <a href="KeyDB_Integration_Plan.md" class="nav-item" target="_blank">🔮 Caching Blueprints</a>
+        <a href="Database_API_Contracts.md" class="nav-item" target="_blank">📊 Database & API Specs</a>
+      </nav>
+      
+      <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <p style="font-size: 0.65rem; color: var(--text-muted); text-align: center; margin-bottom: 0;">
+          Ecosystem Version v3.5.0
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      
+      <!-- Top Search & Controls Bar -->
+      <div class="header-controls">
+        <div class="search-box-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="docsSearch" oninput="filterCards()" placeholder="Search topics, features, database..." class="search-input">
+        </div>
+        <div>
+          <span style="font-size: 0.75rem; color: var(--emerald-400); font-weight: 700; border: 1px solid rgba(52, 211, 153, 0.2); background: rgba(52, 211, 153, 0.05); padding: 0.35rem 0.75rem; border-radius: 9999px;">
+            ● Warm Mode Configured
+          </span>
+        </div>
+      </div>
+
+      <!-- Welcome Banner -->
+      <section id="about" class="doc-card">
+        <div class="card-header-flex">
+          <div class="card-icon">🚀</div>
+          <h2 class="card-title" style="margin-bottom: 0;">Welcome to FitSaaS</h2>
+        </div>
+        <p>
+          FitSaaS is a **premium, privacy-first wellness ecosystem** engineered to map physical metrics, calendar physiological cycle markers, and design customized clinical dietary logs. It provides developers, contributors, and reviewers with a clean showcase of modern web engineering without subscription hurdles.
+        </p>
+        <div class="alert-box alert-note">
+          <strong>💡 Layman Tip:</strong> To browse specific guides, click any topic on the left sidebar, or type keywords in the search bar above (e.g., "Google", "Period", "Diet", "RCA") to filter topics instantly.
+        </div>
+        <p>
+          Whether you are evaluating our architecture, seeking credentials setups, or deploying our Fastify/Next.js layers, this documentation package has everything required to run and understand the complete application flow.
+        </p>
+      </section>
+
+      <!-- System Architecture & Topology -->
+      <section id="architecture" class="doc-card">
+        <div class="card-header-flex">
+          <div class="card-icon">🏗️</div>
+          <h2 class="card-title" style="margin-bottom: 0;">Ecosystem Architecture</h2>
+        </div>
+        <p>
+          FitSaaS operates as a decoupled multi-service project. The client runs on Next.js, coordinating security tokens with a Fastify REST service backend mapping to a serverless Postgres database.
+        </p>
+
+        <h3>System Topology:</h3>
+        <div class="mermaid">
+          graph TD
+              Client[Next.js Client Web Portal<br/>Port 3000 / Vercel]
+              API[Fastify API Gateway<br/>Port 3001 / Render]
+              DB[(Neon Serverless<br/>PostgreSQL)]
+              KeyDB[KeyDB Caching Layer<br/>Future Scope Blueprint]
+
+              Client -- HTTPS Auth Headers --> API
+              API -- Prisma Client --> DB
+              API -.->|Offload Hits| KeyDB
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            🔌 Database Table Structures & Relations
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              Our database consists of 5 central tables designed with high transactional consistency and automated cascade deletion rules:
+            </p>
+            <ul>
+              <li><strong>User Table</strong>: Securely holds credentials (hashed), target weights, height, personalized water/calorie budgets, and cycle configurations.</li>
+              <li><strong>Workout Table</strong>: Records individual exercise sessions, links directly to the User, and logs duration and optional notes.</li>
+              <li><strong>Exercise Table</strong>: Logs specific movements inside a workout. Cascades on workout deletion.</li>
+              <li><strong>Set Table</strong>: Individual physical calibrations containing reps and weight logged in kilograms.</li>
+              <li><strong>MenstrualLog Table</strong>: Records cycle dates, symptomatology tags, mood levels, and energy parameters.</li>
+            </ul>
+            <p>
+              For detailed schema diagrams, data models, and enums, view our <a href="Database_API_Contracts.md" style="color: var(--emerald-400); text-decoration: underline;" target="_blank">Database & API specifications sheet</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Features & Guides -->
+      <section id="features" class="doc-card">
+        <div class="card-header-flex">
+          <div class="card-icon">⚡</div>
+          <h2 class="card-title" style="margin-bottom: 0;">Core Features & How-To Guides</h2>
+        </div>
+        <p>
+          FitSaaS houses highly customized interfaces designed to facilitate daily wellness logging:
+        </p>
+
+        <!-- 3D Card System -->
+        <div class="accordion">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            🏋️ Dynamic 3D Card Flip & Workout Logging
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              <strong>The Interface:</strong> On the Workouts panel, users can view predefined movement cards. Clicking 'Record Workout' executes a hardware-accelerated 3D Y-axis flip, seamlessly displaying a logging form.
+            </p>
+            <p>
+              <strong>Steps to Log a Workout:</strong>
+            </p>
+            <ol>
+              <li>Go to the **Workouts** tab in your dashboard.</li>
+              <li>Click the card representing the exercise you trained.</li>
+              <li>Enter sets, repetitions, and weights used (in kg).</li>
+              <li>Toggle 'Trained Lighter' if you are feeling fatigued during a cycle phase to record an adjusted performance milestone.</li>
+              <li>Click **Save** — the card will flip back, committing the records instantly to PostgreSQL via Fastify.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Hormonal Syncing -->
+        <div class="accordion">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            🌸 Women's Health & Hormonal Phase Syncing
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              Unlike traditional tracking tools, FitSaaS maps active training targets to natural hormonal rhythms:
+            </p>
+            <ul>
+              <li><strong>Menstrual Phase (Days 1-5)</strong>: High fatigue. Recommends light restorative yoga, stretching, and loads adjusted lower by ~20%.</li>
+              <li><strong>Follicular Phase (Days 6-12)</strong>: Rising energy. Perfect for building cardiorespiratory endurance and starting basic lifts.</li>
+              <li><strong>Ovulatory Phase (Days 13-15)</strong>: Peak strength. Recommends maximizing weight capacities, record-breaking sets, and high-intensity logs.</li>
+              <li><strong>Luteal Phase (Days 16-28)</strong>: Gradual recovery. Shifts focus toward steady-state strength training and mental focus.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Clinical Diets -->
+        <div class="accordion">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            🥗 Clinical Subtype Diets & Indian Protein Planner
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              <strong>Medical Subtypes:</strong> Checking the "Medical History" configuration in the profile opens up specialized diets for specific health situations, including:
+            </p>
+            <ul>
+              <li><strong>Insulin-Resistant PCOS</strong>: High-protein, complex fiber meal structures to control insulin spikes.</li>
+              <li><strong>IBS (Inflammatory Bowel)</strong>: Tailored High/Low FODMAP structures preventing digestive distress.</li>
+              <li><strong>Hypo/Hyperthyroidism</strong>: Iodine, selenium, and energy-adjusted diets.</li>
+            </ul>
+            <p>
+              <strong>Indian Protein customizer:</strong> Receive instant local Indian meal log variations (Paneer, Chana, Dal, Eggs, Fish, Chicken) customized to fit Vegetarian, Vegan, or Non-Vegetarian thresholds with single-click Lactose-Free/Gluten-Free filtration!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Privacy & Data Protection -->
+      <section id="privacy" class="doc-card">
+        <div class="card-header-flex">
+          <div class="card-icon">🛡️</div>
+          <h2 class="card-title" style="margin-bottom: 0;">Privacy & Security Standards</h2>
+        </div>
+        <p>
+          FitSaaS is built with extreme security guidelines, protecting critical records:
+        </p>
+        <ul>
+          <li><strong>Cryptographic Password Hashing</strong>: FitSaaS never stores passwords in plain text. Your credentials are encrypted using cryptographic hashing before saving to PostgreSQL.</li>
+          <li><strong>Encrypted JWT Tokens</strong>: Session cookies generated by NextAuth are encrypted JSON Web Tokens (JWT) stored in secure browser cookies, shielding users against session Hijacking.</li>
+          <li><strong>Zero Data Selling</strong>: Your physiological logs, menstrual calendars, and exercises are stored in isolated tables and never aggregated or shared with external trackers.</li>
+        </ul>
+      </section>
+
+      <!-- FAQ & Production Troubleshooting -->
+      <section id="faqs" class="doc-card">
+        <div class="card-header-flex">
+          <div class="card-icon">❓</div>
+          <h2 class="card-title" style="margin-bottom: 0;">FAQ & Production Stability</h2>
+        </div>
+        <p>
+          Common troubleshooting topics and active architectural issues encountered during production deployment:
+        </p>
+
+        <!-- Google OAuth Redirect RCA -->
+        <div class="accordion active">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            ⚠️ Why do I get redirected back to Login twice before succeeding?
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              <strong>The Problem (Render Cold Start)</strong>: 
+              To host FitSaaS 100% free of charge, our Fastify API server resides on a **Render Free container**. Render hibernates containers after 15 minutes of inactivity. Waking up a hibernated container takes **35–45 seconds**. NextAuth has a strict built-in sync timeout limit of **10 seconds**. When logging in after a break:
+            </p>
+            <ol>
+              <li><strong>Attempt #1</strong>: Render container cold start is initiated. NextAuth times out waiting, does not commit the authentication cookie, and redirects you back to `/login`.</li>
+              <li><strong>Attempt #2</strong>: Render server finishes booting up and user lookup completes in PostgreSQL.</li>
+              <li><strong>Attempt #3</strong>: Render is completely awake! Auth sync resolves in less than 150ms, committing the session cookie instantly and redirecting you to `/dashboard`.</li>
+            </ol>
+            <p>
+              <strong>Mitigation / Workaround:</strong>
+            </p>
+            <ul>
+              <li>For a detailed timing sequence flow diagram and fix options, view the <a href="RCA_Sign_In_Issue.md" style="color: var(--emerald-400); text-decoration: underline;" target="_blank">Production Sign-In RCA Log</a>.</li>
+              <li><strong>Future Fix Scope</strong>: We are currently researching placing keep-alive ping bots (UptimeRobot) and deploying a serverless caching layer as mapped out in our <a href="KeyDB_Integration_Plan.md" style="color: var(--emerald-400); text-decoration: underline;" target="_blank">KeyDB caching blueprint</a>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            📱 Can I use FitSaaS as a mobile application?
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <p>
+              Yes! FitSaaS is built with full Progressive Web App (PWA) responsiveness.
+            </p>
+            <ol>
+              <li>Open the dashboard on Safari (iOS) or Chrome (Android).</li>
+              <li>Tap your browser's menu or 'Share' icon.</li>
+              <li>Select **'Add to Home Screen'**.</li>
+              <li>The FitSaaS app icon will populate your phone grid, opening in full-screen native standalone mode for zero-latency operations!</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer Info -->
+      <footer style="text-align: center; margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+        <p style="font-size: 0.75rem; color: var(--text-muted);">
+          FitSaaS Ecosystem © 2026. Made with vanilla styling and responsive glassmorphic grids. All rights reserved.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Interactive JavaScript Controls -->
+  <script>
+    // Scroll smoothly to a target card
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Remove active state from other links, assign to current
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        
+        // Find matching menu item and highlight
+        const targetBtn = Array.from(document.querySelectorAll('.sidebar-nav button'))
+          .find(btn => btn.getAttribute('onclick').includes(id));
+        if (targetBtn) targetBtn.classList.add('active');
+      }
+    }
+
+    // Toggle collapsible accordion panels
+    function toggleAccordion(btn) {
+      const accordion = btn.parentElement;
+      const isActive = accordion.classList.contains('active');
+      
+      // If expanding, close other accordions inside the same card
+      const siblingAccordions = accordion.parentElement.querySelectorAll('.accordion');
+      siblingAccordions.forEach(acc => {
+        acc.classList.remove('active');
+      });
+
+      if (!isActive) {
+        accordion.classList.add('active');
+      }
+    }
+
+    // Live search filter matching text in doc cards
+    function filterCards() {
+      const query = document.getElementById('docsSearch').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.doc-card');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = 'block';
+          // If search matches content inside an accordion, optionally expand the card or accordion
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
