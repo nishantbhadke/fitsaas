@@ -6,6 +6,17 @@ Welcome to the official contributor registry and engineering guidelines for the 
 
 ## 👥 The Legendary Dev Team
 
+### 0. 👑 Sung Jinwoo (@nishantbhadke / @jinwoo-monarch)
+* **Project Role**: Lead Full-Stack Architect & Shadow Monarch
+* **Origin**: Solo Leveling
+* **Character Brief**: 
+  Once known as the "World's Weakest Hunter," Jinwoo survived the horrific Double Dungeon and unlocked a unique gaming-like system that allowed him to continuously "Level Up" his strength without limit. He ultimately became the legendary Shadow Monarch, capable of resurrecting fallen foes as loyal shadow soldiers under his absolute command.
+* **Specialized Domain**: 
+  Full-stack architectural design, application scaling, session orchestration, and overall codebase direction.
+* **Jinwoo's Development Rules**:
+  1. **Relentless Leveling Up**: Never settle for inefficient code. Continuously refactor, optimize database queries, and upgrade system performance to the absolute highest tier.
+  2. **"Arise!" (Shadow Subprocess Control)**: Every sub-service, background process, and API gateway must act like a loyal shadow soldier—instantly responsive, self-contained, and executing tasks flawlessly on command.
+
 ### 1. 🛠️ Tony Stark (@tony-stark-ironman)
 * **Project Role**: Lead DevOps Architect & Systems Automation
 * **Origin**: Marvel Cinematic Universe (MCU)
