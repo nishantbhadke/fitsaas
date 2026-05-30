@@ -28,12 +28,19 @@ jobs:
           # Fetch master branch to compare commits accurately
           git fetch origin master
           
+          # Check if there are commits to merge
+          COMMITS_COUNT=$(git log --oneline origin/master..dev | wc -l)
+          
+          if [ "$COMMITS_COUNT" -eq 0 ]; then
+            echo "No new commits between dev and master. Skipping PR creation."
+            exit 0
+          fi
+          
           # Generate commit changes bullet list
           COMMITS_LIST=$(git log origin/master..dev --pretty=format:"* %s (%h) by %an")
           
           if [ -z "$PR_NUMBER" ]; then
             echo "No open PR found. Creating a new PR..."
-            # Get latest commit message for the PR title
             PR_TITLE=$(git log -1 --pretty=%s)
             
             PR_BODY="## Description of Changes
@@ -52,7 +59,6 @@ jobs:
               --head dev
           else
             echo "Open PR #$PR_NUMBER found. Updating PR details..."
-            # Update PR body with latest commits list
             PR_BODY="## Description of Changes
             
             This Pull Request has been automatically opened/updated on push to the \`dev\` branch. It contains the following recent commits:
@@ -64,3 +70,4 @@ jobs:
             
             gh pr edit "$PR_NUMBER" --body "$PR_BODY"
           fi
+
