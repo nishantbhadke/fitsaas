@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "npm run generate -w database --if-present",
+    "generate": "npm run generate -w database --if-present",
     "predev": "npm run generate -w database --if-present",
     "dev": "npm run dev --workspaces --if-present"
   },
@@ -16,7 +16,7 @@
     "kysely": "0.27.0"
   },
   "devDependencies": {
-    "kysely": "^0.27.0"
+    "kysely": "0.27.0"
   },
   "dependencies": {
     "lightningcss": "^1.32.0",
