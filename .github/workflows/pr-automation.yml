@@ -1,0 +1,66 @@
+name: "PR Automation"
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  pr-create-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or Update Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking open PR from dev to master..."
+          PR_NUMBER=$(gh pr list --head dev --base master --state open --json number -q '.[0].number')
+          
+          # Fetch master branch to compare commits accurately
+          git fetch origin master
+          
+          # Generate commit changes bullet list
+          COMMITS_LIST=$(git log origin/master..dev --pretty=format:"* %s (%h) by %an")
+          
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found. Creating a new PR..."
+            # Get latest commit message for the PR title
+            PR_TITLE=$(git log -1 --pretty=%s)
+            
+            PR_BODY="## Description of Changes
+            
+            This Pull Request has been automatically opened/updated on push to the \`dev\` branch. It contains the following recent commits:
+            
+            $COMMITS_LIST
+            
+            ---
+            *Automated PR raised via FitSaaS CI pipeline.*"
+            
+            gh pr create \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY" \
+              --base master \
+              --head dev
+          else
+            echo "Open PR #$PR_NUMBER found. Updating PR details..."
+            # Update PR body with latest commits list
+            PR_BODY="## Description of Changes
+            
+            This Pull Request has been automatically opened/updated on push to the \`dev\` branch. It contains the following recent commits:
+            
+            $COMMITS_LIST
+            
+            ---
+            *Automated PR raised via FitSaaS CI pipeline.*"
+            
+            gh pr edit "$PR_NUMBER" --body "$PR_BODY"
+          fi

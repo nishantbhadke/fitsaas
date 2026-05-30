@@ -1,0 +1,59 @@
+name: "Tag Automation"
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine and Push Next Release Tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching all Git tags..."
+          git fetch --tags
+          
+          # Get the latest tag matching v3.*
+          LATEST_TAG=$(git tag -l "v3.*" --sort=-v:refname | head -n 1)
+          echo "Latest tag found: '$LATEST_TAG'"
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # If no v3.x.y tags exist, start at v3.5.0
+            NEXT_TAG="v3.5.0"
+            echo "No existing v3 tags found. Starting new version stream at $NEXT_TAG"
+          else
+            # Parse version numbers
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r major minor patch <<< "$VERSION"
+            
+            # Increment the patch version
+            NEW_PATCH=$((patch + 1))
+            NEXT_TAG="v$major.$minor.$NEW_PATCH"
+            echo "Incrementing patch version: $LATEST_TAG -> $NEXT_TAG"
+          fi
+          
+          # Create and push the Git tag
+          echo "Creating Git tag '$NEXT_TAG'..."
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Generate changelog from commits in this push
+          CHANGELOG_MSG=$(git log -1 --pretty=%B)
+          
+          git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG
+          
+          $CHANGELOG_MSG"
+          
+          echo "Pushing tag to origin..."
+          git push origin "$NEXT_TAG"
