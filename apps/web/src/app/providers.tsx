@@ -1,6 +1,6 @@
 "use client";
 
-import { SessionProvider, useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
 
 function SessionControl() {
@@ -125,9 +125,9 @@ function SessionControl() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <>
       <SessionControl />
       {children}
-    </SessionProvider>
+    </>
   );
 }

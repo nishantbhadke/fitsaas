@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/lib/auth-client";
 import { redirect, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, Suspense } from "react";
 
