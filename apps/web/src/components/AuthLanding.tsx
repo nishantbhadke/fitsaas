@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, useSession } from "@/lib/auth-client";
 import { useState } from "react";
 
 function GoogleIcon() {
